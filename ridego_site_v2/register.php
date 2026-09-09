@@ -12,10 +12,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    if ($password !== $confirm_password) {
-        $message = 'Passwords do not match.';
+    // Check phone number
+    if (!preg_match('/^[0-9]{11}$/', $phone)) {
+
+        $message = 'Phone number must be exactly 11 digits.';
         $message_type = 'error';
-    } else {
+
+    // Check password
+    // Check password requirements
+} elseif (
+    strlen($password) < 8 ||
+    !preg_match('/[A-Z]/', $password) ||
+    !preg_match('/[a-z]/', $password) ||
+    !preg_match('/[0-9]/', $password) ||
+    !preg_match('/[^A-Za-z0-9]/', $password)
+) {
+
+    $message = 'Password must be at least 8 characters and contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol.';
+    $message_type = 'error';
+
+// Check if passwords match
+} elseif ($password !== $confirm_password) {
+
+    $message = 'Passwords do not match.';
+    $message_type = 'error';
+
+} else {
 
         // Check if email already exists
         $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
@@ -229,18 +251,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label>
                 PHONE NUMBER
                 <input
-                    type="tel"
-                    name="phone"
-                    required
+                type="tel"
+                name="phone"
+                required
+                maxlength="11"
+                pattern="[0-9]{11}"
+                inputmode="numeric"
                 >
             </label>
 
             <label>
                 PASSWORD
                 <input
-                    type="password"
-                    name="password"
-                    required
+                type="password"
+                name="password"
+                required
+                minlength="8"
+                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}"
+                title="Password must be at least 8 characters and contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol."
                 >
             </label>
 

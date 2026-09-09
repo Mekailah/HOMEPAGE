@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'db.php';
+require_once 'login_function.php';
 
 $message = '';
 $message_type = '';
@@ -220,8 +220,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="login-container">
 
     <div class="logo">
-        <a href="index.php">
-            <img src="assets/logo.svg" alt="RIDEGO RENTALS">
+        <a href="../index.php">
+            <img src="../assets/logo.svg" alt="RIDEGO RENTALS">
         </a>
     </div>
 
@@ -268,7 +268,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="register-link">
             Don't have an account?
-            <a href="register.php">REGISTER</a>
+            <a href="../register.php">REGISTER</a>
         </div>
 
     </div>

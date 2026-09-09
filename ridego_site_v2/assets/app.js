@@ -16,6 +16,21 @@ document.querySelectorAll('.main-nav a').forEach(link => {
 
 document.querySelectorAll('.js-book').forEach(button => {
     button.addEventListener('click', () => {
+
+        const motorcycle = button.dataset.motorcycle;
+        const price = button.dataset.price;
+
+        const motorcycleField = document.getElementById('bookingMotorcycle');
+        const priceField = document.getElementById('bookingPrice');
+
+        if (motorcycleField) {
+            motorcycleField.value = motorcycle || '';
+        }
+
+        if (priceField) {
+            priceField.value = price || '';
+        }
+
         modal.classList.add('open');
         modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';

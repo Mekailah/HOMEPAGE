@@ -1,5 +1,7 @@
 <?php
 session_start();
+
+$is_logged_in = isset($_SESSION['user_id']);
 //http://localhost/trial_app/HOMEPAGE/ridego_site_v2/
 $vehicles = [
     ['name' => 'Honda Click 125 cc', 'price' => '₱629.00/Day', 'image' => 'assets/honda-click-125.png'],
@@ -47,7 +49,7 @@ $features = [
     </span>
     <a href="logout.php" class="nav-register">LOGOUT</a>
        <?php else: ?>
-    <a href="login.php" class="nav-login">LOGIN</a>
+    <a href="../login.php" class="nav-login">LOGIN</a>
     <a href="register.php" class="nav-register">REGISTER</a>
        <?php endif; ?>
            </nav>
@@ -58,7 +60,9 @@ $features = [
         <div class="hero-content">
         <h1 style="color: #0E1B29 !important;">RIDE MORE.<br>WORRY <span style="color: #3C8D8A !important;">LESS.</span></h1>
             <p>Your ride, your schedule. Explore the City<br>and beyond with RIDEGO RENTALS</p>
-            <button class="button button-hero js-book" type="button">BOOK YOUR RIDE <span>›</span></button>
+            <a class="button button-hero" href="motorcycles.php">
+            BOOK YOUR RIDE <span>›</span>
+            </a>
         </div>
     </section>
 
@@ -87,7 +91,23 @@ $features = [
                     <div class="vehicle-info">
                         <h3><?= htmlspecialchars($vehicle['name']) ?></h3>
                         <p><?= htmlspecialchars($vehicle['price']) ?></p>
-                        <button class="button button-small js-book" type="button">RENT NOW</button>
+                        <?php if ($is_logged_in): ?>
+
+                        <button class="button button-small js-book"
+                            type="button"
+                            data-motorcycle="<?= htmlspecialchars($vehicle['name']) ?>"
+                            data-price="<?= htmlspecialchars(str_replace(['₱', '/Day', ','], '', $vehicle['price'])) ?>"
+                        >
+                            RENT NOW
+                        </button>
+
+                        <?php else: ?>
+
+                            <a class="button button-small" href="login.php">
+                                RENT NOW
+                            </a>
+
+<?php endif; ?>
                     </div>
                 </article>
             <?php endforeach; ?>
@@ -171,7 +191,7 @@ $features = [
 
             <p>Fill in the details below to reserve your motorcycle.</p>
 
-            <form id="bookingForm">
+            <form id="bookingForm" method="POST" action="book.php">
 
                 <label>
                     NAME
@@ -182,6 +202,9 @@ $features = [
                     EMAIL
                     <input type="email" name="email" required>
                 </label>
+
+                    <input type="hidden" name="motorcycle_name" id="bookingMotorcycle">
+                    <input type="hidden" name="price_per_day" id="bookingPrice">
 
                 <label>SELECT DATE
                     <input type="date" name="pickup_date" required>
