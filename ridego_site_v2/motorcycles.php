@@ -172,10 +172,7 @@ $motorcycles = [
 
     </footer>
 
-
-    <!-- ================================================== -->
     <!-- PASTE YOUR BOOKING MODAL HERE -->
-    <!-- ================================================== -->
 
     <div class="modal" id="bookingModal" aria-hidden="true">
 
@@ -220,11 +217,6 @@ $motorcycles = [
         </div>
 
     </div>
-
-
-    <!-- ================================================== -->
-    <!-- YOUR JAVASCRIPT GOES HERE -->
-    <!-- ================================================== -->
 
     <script src="assets/app.js"></script>
 
