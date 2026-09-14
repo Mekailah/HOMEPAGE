@@ -6,6 +6,14 @@ $status_updated =
     isset($_GET['status']) &&
     $_GET['status'] === 'updated';
 
+    $inventory_updated =
+    isset($_GET['inventory']) &&
+    $_GET['inventory'] === 'updated';
+
+$inventory_error =
+    isset($_GET['inventory']) &&
+    $_GET['inventory'] === 'error';
+    
 /* User must be logged in */
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -24,19 +32,30 @@ $total_users_result = $conn->query("
     FROM users
     WHERE role = 'customer'
 ");
-$total_users = $total_users_result->fetch_assoc()['total'];
 
+$total_users =
+    $total_users_result->fetch_assoc()['total'];
+
+
+/* Total bookings */
 $total_bookings_result = $conn->query("
     SELECT COUNT(*) AS total
     FROM bookings
 ");
-$total_bookings = $total_bookings_result->fetch_assoc()['total'];
 
+$total_bookings =
+    $total_bookings_result->fetch_assoc()['total'];
+
+
+/* Total available motorcycles */
 $total_available_result = $conn->query("
     SELECT SUM(available_units) AS total
     FROM motorcycle_inventory
 ");
-$total_available = $total_available_result->fetch_assoc()['total'] ?? 0;
+
+$total_available =
+    $total_available_result->fetch_assoc()['total'] ?? 0;
+
 
 /* Get bookings */
 $bookings = $conn->query("
@@ -58,25 +77,54 @@ $bookings = $conn->query("
         ON bookings.user_id = users.id
     ORDER BY bookings.id DESC
 ");
+
+
+/* Get motorcycle inventory */
+$inventory_list = $conn->query("
+    SELECT
+        id,
+        motorcycle_name,
+        total_units,
+        available_units
+    FROM motorcycle_inventory
+    ORDER BY motorcycle_name ASC
+");
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Owner Dashboard | RIDEGO RENTALS</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>
+        Owner Dashboard | RIDEGO RENTALS
+    </title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
     <link
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap"
         rel="stylesheet"
     >
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -88,10 +136,14 @@ $bookings = $conn->query("
             color: #0E1B29;
         }
 
+
+        /* HEADER */
+
         .admin-header {
             background: #0E1B29;
             color: #FFFFFF;
             padding: 18px 5%;
+
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -109,11 +161,17 @@ $bookings = $conn->query("
             font-weight: 700;
         }
 
+
+        /* DASHBOARD */
+
         .dashboard {
             width: 90%;
             max-width: 1200px;
             margin: 35px auto;
         }
+
+
+        /* WELCOME */
 
         .welcome {
             margin-bottom: 25px;
@@ -128,10 +186,14 @@ $bookings = $conn->query("
             font-size: 14px;
         }
 
+
+        /* STATISTICS */
+
         .stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
+
             margin-bottom: 35px;
         }
 
@@ -148,9 +210,13 @@ $bookings = $conn->query("
 
         .stat-card h3 {
             margin: 8px 0 0;
+
             font-size: 30px;
             color: #3C8D8A;
         }
+
+
+        /* TABLE SECTIONS */
 
         .bookings-section {
             background: #FFFFFF;
@@ -164,17 +230,49 @@ $bookings = $conn->query("
             font-size: 20px;
         }
 
+        .bookings-section input[type="number"] {
+            width: 90px;
+            padding: 7px 10px;
+            border: 1px solid #cccccc;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+        }
+
+        .bookings-section button {
+            padding: 7px 12px;
+            border: none;
+            border-radius: 8px;
+            background: #3C8D8A;
+            color: #FFFFFF;
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .bookings-section button:hover {
+            opacity: 0.9;
+        }
+
+
+        /* TABLE */
+
         table {
             width: 100%;
             border-collapse: collapse;
+
             font-size: 12px;
         }
 
         th,
         td {
             padding: 12px;
+
             text-align: left;
+
             border-bottom: 1px solid #dddddd;
+
             white-space: nowrap;
         }
 
@@ -182,6 +280,9 @@ $bookings = $conn->query("
             background: #0E1B29;
             color: #FFFFFF;
         }
+
+
+        /* STATUS */
 
         .status {
             color: #3C8D8A;
@@ -196,21 +297,28 @@ $bookings = $conn->query("
 
         .status select {
             padding: 7px 10px;
+
             border: 1px solid #cccccc;
             border-radius: 8px;
+
             font-family: 'Poppins', sans-serif;
             font-size: 12px;
         }
 
         .status button {
             padding: 7px 12px;
+
             border: none;
             border-radius: 8px;
+
             background: #3C8D8A;
             color: #FFFFFF;
+
             font-family: 'Poppins', sans-serif;
+
             font-size: 11px;
             font-weight: 700;
+
             cursor: pointer;
         }
 
@@ -218,7 +326,11 @@ $bookings = $conn->query("
             opacity: 0.9;
         }
 
+
+        /* MOBILE */
+
         @media (max-width: 700px) {
+
             .stats {
                 grid-template-columns: 1fr;
             }
@@ -230,208 +342,559 @@ $bookings = $conn->query("
             .dashboard {
                 width: 92%;
             }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
+
 <header class="admin-header">
 
-    <h1>RIDEGO OWNER DASHBOARD</h1>
+    <h1>
+        RIDEGO OWNER DASHBOARD
+    </h1>
 
-    <a href="logout.php">LOGOUT</a>
+    <a href="logout.php">
+        LOGOUT
+    </a>
 
 </header>
 
+
 <main class="dashboard">
 
-        <?php if ($status_updated): ?>
 
-            <div
-                id="statusMessage"
-                style="
-                    background:#3C8D8A;
-                    color:#FFFFFF;
-                    padding:12px 16px;
-                    border-radius:10px;
-                    margin-bottom:20px;
-                    text-align:center;
-                    font-size:13px;
-                    font-weight:700;
-                "
-            >
-                Booking status updated successfully!
-            </div>
+    <!-- BOOKING STATUS MESSAGE -->
 
-            <script>
-                setTimeout(function () {
-                    const message = document.getElementById('statusMessage');
+<?php if ($status_updated): ?>
 
-                    if (message) {
-                        message.style.display = 'none';
-                    }
-                }, 3000);
+    <div
+        id="statusMessage"
+        style="
+            background:#3C8D8A;
+            color:#FFFFFF;
+            padding:12px 16px;
+            border-radius:10px;
+            margin-bottom:20px;
+            text-align:center;
+            font-size:13px;
+            font-weight:700;
+        "
+    >
+        Booking status updated successfully!
+    </div>
 
-                if (window.history.replaceState) {
-                    window.history.replaceState(null, '', 'admin.php');
-                }
-            </script>
+<?php endif; ?>
 
-        <?php endif; ?>
+
+<!-- INVENTORY SUCCESS MESSAGE -->
+
+<?php if ($inventory_updated): ?>
+
+    <div
+        id="inventoryMessage"
+        style="
+            background:#3C8D8A;
+            color:#FFFFFF;
+            padding:12px 16px;
+            border-radius:10px;
+            margin-bottom:20px;
+            text-align:center;
+            font-size:13px;
+            font-weight:700;
+        "
+    >
+        Inventory updated successfully!
+    </div>
+
+<?php endif; ?>
+
+
+<!-- INVENTORY ERROR MESSAGE -->
+
+    <?php if ($inventory_error): ?>
+
+        <div
+            id="inventoryError"
+            style="
+                background:#b42318;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Available units cannot be greater than total units.
+        </div>
+
+    <?php endif; ?>
+
+
+   <script>
+    setTimeout(function () {
+
+        const statusMessage =
+            document.getElementById('statusMessage');
+
+        const inventoryMessage =
+            document.getElementById('inventoryMessage');
+
+        const inventoryError =
+            document.getElementById('inventoryError');
+
+
+        if (statusMessage) {
+            statusMessage.style.display = 'none';
+        }
+
+        if (inventoryMessage) {
+            inventoryMessage.style.display = 'none';
+        }
+
+        if (inventoryError) {
+            inventoryError.style.display = 'none';
+        }
+
+    }, 3000);
+
+
+    if (window.history.replaceState) {
+        window.history.replaceState(
+            null,
+            '',
+            'admin.php'
+        );
+    }
+</script>
+
+
+
+    <!-- WELCOME -->
 
     <div class="welcome">
+
         <h2>
+
             Welcome,
+
             <?= htmlspecialchars($_SESSION['full_name']) ?>
+
         </h2>
 
-        <p>Manage and monitor RIDEGO RENTALS.</p>
+        <p>
+            Manage and monitor RIDEGO RENTALS.
+        </p>
+
     </div>
+
+
+    <!-- DASHBOARD TOTALS -->
 
     <div class="stats">
 
         <div class="stat-card">
-            <p>TOTAL CUSTOMERS</p>
-            <h3><?= $total_users ?></h3>
+
+            <p>
+                TOTAL CUSTOMERS
+            </p>
+
+            <h3>
+                <?= $total_users ?>
+            </h3>
+
         </div>
 
-        <div class="stat-card">
-            <p>TOTAL BOOKINGS</p>
-            <h3><?= $total_bookings ?></h3>
-        </div>
 
         <div class="stat-card">
-            <p>AVAILABLE MOTORCYCLES</p>
-            <h3><?= $total_available ?></h3>
+
+            <p>
+                TOTAL BOOKINGS
+            </p>
+
+            <h3>
+                <?= $total_bookings ?>
+            </h3>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <p>
+                AVAILABLE MOTORCYCLES
+            </p>
+
+            <h3>
+                <?= $total_available ?>
+            </h3>
+
         </div>
 
     </div>
 
+
+    <!-- BOOKINGS -->
+
     <section class="bookings-section">
 
-        <h2>BOOKINGS</h2>
+        <h2>
+            BOOKINGS
+        </h2>
+
 
         <table>
 
             <thead>
+
                 <tr>
+
                     <th>ID</th>
+
                     <th>CUSTOMER</th>
+
                     <th>EMAIL</th>
+
                     <th>MOTORCYCLE</th>
+
                     <th>PICK-UP</th>
+
                     <th>RETURN</th>
+
                     <th>PAYMENT</th>
+
                     <th>PICK-UP LOCATION</th>
+
                     <th>DROP-OFF LOCATION</th>
+
                     <th>STATUS</th>
+
                 </tr>
+
             </thead>
+
 
             <tbody>
 
-                <?php if ($bookings && $bookings->num_rows > 0): ?>
 
-                    <?php while ($booking = $bookings->fetch_assoc()): ?>
+            <?php if (
+                $bookings &&
+                $bookings->num_rows > 0
+            ): ?>
 
-                        <tr>
-                            <td>
-                                <?= htmlspecialchars($booking['id']) ?>
-                            </td>
 
-                            <td>
-                                <?= htmlspecialchars($booking['full_name']) ?>
-                            </td>
+                <?php while (
+                    $booking =
+                        $bookings->fetch_assoc()
+                ): ?>
 
-                            <td>
-                                <?= htmlspecialchars($booking['email']) ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars($booking['motorcycle_name']) ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars($booking['pickup_date']) ?>
-                                <?= htmlspecialchars($booking['pickup_time']) ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars($booking['return_date']) ?>
-                                <?= htmlspecialchars($booking['return_time']) ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars($booking['payment_method']) ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars($booking['pickup_branch']) ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars($booking['dropoff_branch']) ?>
-                            </td>
-
-                            <td class="status">
-                                <form method="POST" action="update_status.php">
-
-                                    <input
-                                        type="hidden"
-                                        name="booking_id"
-                                        value="<?= htmlspecialchars($booking['id']) ?>"
-                                    >
-
-                                    <select name="status">
-                                        <option value="Pending"
-                                            <?= $booking['status'] === 'Pending' ? 'selected' : '' ?>>
-                                            Pending
-                                        </option>
-
-                                        <option value="Confirmed"
-                                            <?= $booking['status'] === 'Confirmed' ? 'selected' : '' ?>>
-                                            Confirmed
-                                        </option>
-
-                                        <option value="Completed"
-                                            <?= $booking['status'] === 'Completed' ? 'selected' : '' ?>>
-                                            Completed
-                                        </option>
-
-                                        <option value="Cancelled"
-                                            <?= $booking['status'] === 'Cancelled' ? 'selected' : '' ?>>
-                                            Cancelled
-                                        </option>
-                                    </select>
-
-                                    <button type="submit">
-                                        SAVE
-                                    </button>
-
-                                </form>
-                            </td>
-                        </tr>
-
-                    <?php endwhile; ?>
-
-                <?php else: ?>
 
                     <tr>
-                        <td colspan="10">
-                            No bookings found.
+
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $booking['id']
+                            ) ?>
                         </td>
+
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $booking['full_name']
+                            ) ?>
+                        </td>
+
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $booking['email']
+                            ) ?>
+                        </td>
+
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $booking['motorcycle_name']
+                            ) ?>
+                        </td>
+
+
+                        <td>
+
+                            <?= htmlspecialchars(
+                                $booking['pickup_date']
+                            ) ?>
+
+                            <?= htmlspecialchars(
+                                $booking['pickup_time']
+                            ) ?>
+
+                        </td>
+
+
+                        <td>
+
+                            <?= htmlspecialchars(
+                                $booking['return_date']
+                            ) ?>
+
+                            <?= htmlspecialchars(
+                                $booking['return_time']
+                            ) ?>
+
+                        </td>
+
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $booking['payment_method']
+                            ) ?>
+                        </td>
+
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $booking['pickup_branch']
+                            ) ?>
+                        </td>
+
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $booking['dropoff_branch']
+                            ) ?>
+                        </td>
+
+
+                        <!-- BOOKING STATUS -->
+
+                        <td class="status">
+
+
+                            <form
+                                method="POST"
+                                action="update_status.php"
+                            >
+
+
+                                <input
+                                    type="hidden"
+                                    name="booking_id"
+                                    value="<?= htmlspecialchars(
+                                        $booking['id']
+                                    ) ?>"
+                                >
+
+
+                                <select name="status">
+
+
+                                    <option
+                                        value="Pending"
+                                        <?= $booking['status'] === 'Pending'
+                                            ? 'selected'
+                                            : '' ?>
+                                    >
+                                        Pending
+                                    </option>
+
+
+                                    <option
+                                        value="Confirmed"
+                                        <?= $booking['status'] === 'Confirmed'
+                                            ? 'selected'
+                                            : '' ?>
+                                    >
+                                        Confirmed
+                                    </option>
+
+
+                                    <option
+                                        value="Completed"
+                                        <?= $booking['status'] === 'Completed'
+                                            ? 'selected'
+                                            : '' ?>
+                                    >
+                                        Completed
+                                    </option>
+
+
+                                    <option
+                                        value="Cancelled"
+                                        <?= $booking['status'] === 'Cancelled'
+                                            ? 'selected'
+                                            : '' ?>
+                                    >
+                                        Cancelled
+                                    </option>
+
+
+                                </select>
+
+
+                                <button type="submit">
+                                    SAVE
+                                </button>
+
+
+                            </form>
+
+
+                        </td>
+
+
                     </tr>
 
-                <?php endif; ?>
+
+                <?php endwhile; ?>
+
+
+            <?php else: ?>
+
+
+                <tr>
+
+                    <td colspan="10">
+                        No bookings found.
+                    </td>
+
+                </tr>
+
+
+            <?php endif; ?>
+
 
             </tbody>
 
+
         </table>
+
 
     </section>
 
+
+
+    <!-- MOTORCYCLE INVENTORY -->
+
+    <!-- MOTORCYCLE INVENTORY -->
+
+<section
+    class="bookings-section"
+    style="margin-top:30px;"
+>
+
+    <h2>
+        MOTORCYCLE INVENTORY
+    </h2>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>MOTORCYCLE</th>
+                <th>TOTAL UNITS</th>
+                <th>AVAILABLE UNITS</th>
+                <th>ACTION</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+        <?php if (
+            $inventory_list &&
+            $inventory_list->num_rows > 0
+        ): ?>
+
+            <?php while (
+                $motorcycle =
+                    $inventory_list->fetch_assoc()
+            ): ?>
+
+                <tr>
+
+                    <form
+                        method="POST"
+                        action="update_inventory.php"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="inventory_id"
+                            value="<?= htmlspecialchars(
+                                $motorcycle['id']
+                            ) ?>"
+                        >
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $motorcycle['motorcycle_name']
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <input
+                                type="number"
+                                name="total_units"
+                                min="0"
+                                value="<?= htmlspecialchars(
+                                    $motorcycle['total_units']
+                                ) ?>"
+                                required
+                            >
+                        </td>
+
+                        <td>
+                            <input
+                                type="number"
+                                name="available_units"
+                                min="0"
+                                value="<?= htmlspecialchars(
+                                    $motorcycle['available_units']
+                                ) ?>"
+                                required
+                            >
+                        </td>
+
+                        <td>
+                            <button type="submit">
+                                SAVE
+                            </button>
+                        </td>
+
+                    </form>
+
+                </tr>
+
+            <?php endwhile; ?>
+
+        <?php else: ?>
+
+            <tr>
+                <td colspan="4">
+                    No motorcycles found.
+                </td>
+            </tr>
+
+        <?php endif; ?>
+
+        </tbody>
+
+    </table>
+
+</section>
+
+
 </main>
 
+
 </body>
+
 </html>

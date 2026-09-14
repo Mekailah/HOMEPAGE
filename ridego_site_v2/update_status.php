@@ -47,6 +47,6 @@ $stmt->execute();
 $stmt->close();
 $conn->close();
 
-header("Location: admin.php");
+header("Location: admin.php?status=updated");
 exit;
 ?>
