@@ -84,14 +84,14 @@ $motorcycle_prices = [
     'Yamaha Fazzio 125cc' => 819.00,
     'Yamaha AEROX 155 CC' => 799.00,
     'Honda Beat 110' => 449.00,
-    'Honda ADV 160' => 899.00,
-    'Yamaha PG-1' => 699.00,
-    'Honda NAVi' => 549.00,
-    'Yamaha NMAX ABS' => 899.00,
-    'Honda XRM 125' => 549.00,
-    'Yamaha Vino Classic' => 599.00,
-    'Kawasaki Ninja 1000SX' => 1499.00,
-    'Yamaha Sniper 155' => 799.00
+    'Honda ADV 160' => 900.00,
+    'Yamaha PG-1' => 800.00,
+    'Honda NAVi' => 600.00,
+    'Yamaha NMAX ABS' => 850.00,
+    'Honda XRM 125' => 600.00,
+    'Yamaha Vino Classic' => 650.00,
+    'Kawasaki Ninja 1000SX' => 3500.00,
+    'Yamaha Sniper 155' => 750.00
 ];
 
 
@@ -162,6 +162,55 @@ if (
     );
 }
 
+function isValidBookingTime(string $time): bool
+{
+    if (!preg_match('/^\d{2}:\d{2}$/', $time)) {
+        return false;
+    }
+
+    [$hour, $minute] =
+        array_map(
+            'intval',
+            explode(':', $time)
+        );
+
+    /* Only :00 or :30 */
+    if (
+        $minute !== 0 &&
+        $minute !== 30
+    ) {
+        return false;
+    }
+
+    /* Earliest allowed: 6:00 AM */
+    if ($hour < 6) {
+        return false;
+    }
+
+    /* Latest allowed: 10:00 PM */
+    if ($hour > 22) {
+        return false;
+    }
+
+    /* At 10 PM, only 10:00 PM is allowed */
+    if (
+        $hour === 22 &&
+        $minute !== 0
+    ) {
+        return false;
+    }
+
+    return true;
+}
+
+if (
+    !isValidBookingTime($pickup_time) ||
+    !isValidBookingTime($return_time)
+) {
+    bookingError(
+        "Pickup and return times must be between 6:00 AM and 10:00 PM in 30-minute intervals."
+    );
+}
 
 /* Validate booking date and time */
 $pickup_datetime =

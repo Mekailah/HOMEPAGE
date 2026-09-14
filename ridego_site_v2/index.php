@@ -42,6 +42,87 @@ $features = [
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/style.css">
+
+    <style>
+
+        .time-picker {
+            position: relative;
+            margin-top: 6px;
+            width: 220px;
+            max-width: 100%;
+        }
+
+        .time-picker-toggle {
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 36px 9px 12px;
+            border: 1px solid #cfd6dc;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #0E1B29;
+            font: inherit;
+            font-weight: 400;
+            text-align: left;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .time-picker-toggle::after {
+            content: "⌄";
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-55%);
+            font-size: 18px;
+        }
+
+        .time-picker.open .time-picker-toggle::after {
+            transform: translateY(-45%) rotate(180deg);
+        }
+
+        .time-picker-menu {
+            display: none;
+            position: absolute;
+            z-index: 50;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            max-height: 220px;
+            overflow-y: auto;
+            background: #ffffff;
+            border: 1px solid #cfd6dc;
+            border-radius: 8px;
+            box-shadow: 0 10px 24px rgba(14, 27, 41, 0.14);
+        }
+
+        .time-picker.open .time-picker-menu {
+            display: block;
+        }
+
+        .time-option {
+            width: 100%;
+            padding: 10px 12px;
+            border: 0;
+            background: #ffffff;
+            color: #0E1B29;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .time-option:hover,
+        .time-option:focus {
+            background: #eef7f6;
+            outline: none;
+        }
+
+        .time-option.selected {
+            background: #3C8D8A;
+            color: #ffffff;
+        }
+
+    </style>
+
 </head>
 <body>
 <header class="site-header">
@@ -337,16 +418,122 @@ $features = [
                     <input type="date" name="pickup_date" required>
                 </label>
 
-                <label>SELECT TIME
-                    <input type="time" name="pickup_time" required>
+                <label>
+                    PICKUP TIME
+                    <div class="time-picker" data-time-picker>
+                        <button
+                            type="button"
+                            class="time-picker-toggle"
+                            aria-haspopup="listbox"
+                            aria-expanded="false"
+                        >
+                            Select time
+                        </button>
+
+                        <div class="time-picker-menu" role="listbox">
+                            <button type="button" class="time-option" data-value="06:00">6:00 AM</button>
+                            <button type="button" class="time-option" data-value="06:30">6:30 AM</button>
+                            <button type="button" class="time-option" data-value="07:00">7:00 AM</button>
+                            <button type="button" class="time-option" data-value="07:30">7:30 AM</button>
+                            <button type="button" class="time-option" data-value="08:00">8:00 AM</button>
+                            <button type="button" class="time-option" data-value="08:30">8:30 AM</button>
+                            <button type="button" class="time-option" data-value="09:00">9:00 AM</button>
+                            <button type="button" class="time-option" data-value="09:30">9:30 AM</button>
+                            <button type="button" class="time-option" data-value="10:00">10:00 AM</button>
+                            <button type="button" class="time-option" data-value="10:30">10:30 AM</button>
+                            <button type="button" class="time-option" data-value="11:00">11:00 AM</button>
+                            <button type="button" class="time-option" data-value="11:30">11:30 AM</button>
+                            <button type="button" class="time-option" data-value="12:00">12:00 PM</button>
+                            <button type="button" class="time-option" data-value="12:30">12:30 PM</button>
+                            <button type="button" class="time-option" data-value="13:00">1:00 PM</button>
+                            <button type="button" class="time-option" data-value="13:30">1:30 PM</button>
+                            <button type="button" class="time-option" data-value="14:00">2:00 PM</button>
+                            <button type="button" class="time-option" data-value="14:30">2:30 PM</button>
+                            <button type="button" class="time-option" data-value="15:00">3:00 PM</button>
+                            <button type="button" class="time-option" data-value="15:30">3:30 PM</button>
+                            <button type="button" class="time-option" data-value="16:00">4:00 PM</button>
+                            <button type="button" class="time-option" data-value="16:30">4:30 PM</button>
+                            <button type="button" class="time-option" data-value="17:00">5:00 PM</button>
+                            <button type="button" class="time-option" data-value="17:30">5:30 PM</button>
+                            <button type="button" class="time-option" data-value="18:00">6:00 PM</button>
+                            <button type="button" class="time-option" data-value="18:30">6:30 PM</button>
+                            <button type="button" class="time-option" data-value="19:00">7:00 PM</button>
+                            <button type="button" class="time-option" data-value="19:30">7:30 PM</button>
+                            <button type="button" class="time-option" data-value="20:00">8:00 PM</button>
+                            <button type="button" class="time-option" data-value="20:30">8:30 PM</button>
+                            <button type="button" class="time-option" data-value="21:00">9:00 PM</button>
+                            <button type="button" class="time-option" data-value="21:30">9:30 PM</button>
+                            <button type="button" class="time-option" data-value="22:00">10:00 PM</button>
+                        </div>
+
+                        <input
+                            type="hidden"
+                            name="pickup_time"
+                            class="time-picker-value"
+                            required
+                        >
+                    </div>
                 </label>
 
                 <label>RETURN DATE
                     <input type="date" name="return_date" required>
                 </label>
 
-                <label>RETURN TIME
-                    <input type="time" name="return_time" required>
+                <label>
+                    RETURN TIME
+                    <div class="time-picker" data-time-picker>
+                        <button
+                            type="button"
+                            class="time-picker-toggle"
+                            aria-haspopup="listbox"
+                            aria-expanded="false"
+                        >
+                            Select time
+                        </button>
+
+                        <div class="time-picker-menu" role="listbox">
+                            <button type="button" class="time-option" data-value="06:00">6:00 AM</button>
+                            <button type="button" class="time-option" data-value="06:30">6:30 AM</button>
+                            <button type="button" class="time-option" data-value="07:00">7:00 AM</button>
+                            <button type="button" class="time-option" data-value="07:30">7:30 AM</button>
+                            <button type="button" class="time-option" data-value="08:00">8:00 AM</button>
+                            <button type="button" class="time-option" data-value="08:30">8:30 AM</button>
+                            <button type="button" class="time-option" data-value="09:00">9:00 AM</button>
+                            <button type="button" class="time-option" data-value="09:30">9:30 AM</button>
+                            <button type="button" class="time-option" data-value="10:00">10:00 AM</button>
+                            <button type="button" class="time-option" data-value="10:30">10:30 AM</button>
+                            <button type="button" class="time-option" data-value="11:00">11:00 AM</button>
+                            <button type="button" class="time-option" data-value="11:30">11:30 AM</button>
+                            <button type="button" class="time-option" data-value="12:00">12:00 PM</button>
+                            <button type="button" class="time-option" data-value="12:30">12:30 PM</button>
+                            <button type="button" class="time-option" data-value="13:00">1:00 PM</button>
+                            <button type="button" class="time-option" data-value="13:30">1:30 PM</button>
+                            <button type="button" class="time-option" data-value="14:00">2:00 PM</button>
+                            <button type="button" class="time-option" data-value="14:30">2:30 PM</button>
+                            <button type="button" class="time-option" data-value="15:00">3:00 PM</button>
+                            <button type="button" class="time-option" data-value="15:30">3:30 PM</button>
+                            <button type="button" class="time-option" data-value="16:00">4:00 PM</button>
+                            <button type="button" class="time-option" data-value="16:30">4:30 PM</button>
+                            <button type="button" class="time-option" data-value="17:00">5:00 PM</button>
+                            <button type="button" class="time-option" data-value="17:30">5:30 PM</button>
+                            <button type="button" class="time-option" data-value="18:00">6:00 PM</button>
+                            <button type="button" class="time-option" data-value="18:30">6:30 PM</button>
+                            <button type="button" class="time-option" data-value="19:00">7:00 PM</button>
+                            <button type="button" class="time-option" data-value="19:30">7:30 PM</button>
+                            <button type="button" class="time-option" data-value="20:00">8:00 PM</button>
+                            <button type="button" class="time-option" data-value="20:30">8:30 PM</button>
+                            <button type="button" class="time-option" data-value="21:00">9:00 PM</button>
+                            <button type="button" class="time-option" data-value="21:30">9:30 PM</button>
+                            <button type="button" class="time-option" data-value="22:00">10:00 PM</button>
+                        </div>
+
+                        <input
+                            type="hidden"
+                            name="return_time"
+                            class="time-picker-value"
+                            required
+                        >
+                    </div>
                 </label>
 
                 <div class="booking-total">
@@ -388,6 +575,60 @@ $features = [
         </div>
 
     </div>
+
+
+<script>
+document.querySelectorAll('[data-time-picker]').forEach(function (picker) {
+    const toggle = picker.querySelector('.time-picker-toggle');
+    const menu = picker.querySelector('.time-picker-menu');
+    const hiddenInput = picker.querySelector('.time-picker-value');
+    const options = picker.querySelectorAll('.time-option');
+
+    toggle.addEventListener('click', function () {
+        document.querySelectorAll('[data-time-picker].open').forEach(function (otherPicker) {
+            if (otherPicker !== picker) {
+                otherPicker.classList.remove('open');
+                const otherToggle = otherPicker.querySelector('.time-picker-toggle');
+                if (otherToggle) {
+                    otherToggle.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+
+        const isOpen = picker.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    options.forEach(function (option) {
+        option.addEventListener('click', function () {
+            hiddenInput.value = option.dataset.value;
+            toggle.textContent = option.textContent.trim();
+
+            options.forEach(function (item) {
+                item.classList.remove('selected');
+            });
+
+            option.classList.add('selected');
+            picker.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+
+            hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+});
+
+document.addEventListener('click', function (event) {
+    document.querySelectorAll('[data-time-picker].open').forEach(function (picker) {
+        if (!picker.contains(event.target)) {
+            picker.classList.remove('open');
+            const toggle = picker.querySelector('.time-picker-toggle');
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        }
+    });
+});
+</script>
 
 <script src="assets/app.js"></script>
 </body>
