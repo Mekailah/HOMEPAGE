@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS ridego_rentals;
+USE ridego_rentals;
+
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
