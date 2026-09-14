@@ -3,6 +3,8 @@
 session_start();
 require_once 'db.php';
 
+date_default_timezone_set('Asia/Manila');
+
 
 /* Redirect back to homepage with an error message */
 function bookingError(string $message): void
@@ -37,7 +39,47 @@ $user_id = (int) $_SESSION['user_id'];
 $motorcycle_name =
     trim($_POST['motorcycle_name'] ?? '');
 
-    $motorcycle_prices = [
+$pickup_date =
+    trim($_POST['pickup_date'] ?? '');
+
+$pickup_time =
+    trim($_POST['pickup_time'] ?? '');
+
+$return_date =
+    trim($_POST['return_date'] ?? '');
+
+$return_time =
+    trim($_POST['return_time'] ?? '');
+
+$payment_method =
+    trim($_POST['payment_method'] ?? '');
+
+$pickup_branch =
+    trim($_POST['pickup_branch'] ?? '');
+
+$dropoff_branch =
+    trim($_POST['dropoff_branch'] ?? '');
+
+
+/* Check required fields */
+if (
+    $motorcycle_name === '' ||
+    $pickup_date === '' ||
+    $pickup_time === '' ||
+    $return_date === '' ||
+    $return_time === '' ||
+    $payment_method === '' ||
+    $pickup_branch === '' ||
+    $dropoff_branch === ''
+) {
+    bookingError(
+        "Please complete all required booking fields."
+    );
+}
+
+
+/* Validate motorcycle and get price from server */
+$motorcycle_prices = [
     'Honda Click 125 cc' => 629.00,
     'Yamaha Fazzio 125cc' => 819.00,
     'Yamaha AEROX 155 CC' => 799.00,
@@ -53,47 +95,16 @@ $motorcycle_name =
 ];
 
 
-if (!isset($motorcycle_prices[$motorcycle_name])) {
+if (
+    !isset(
+        $motorcycle_prices[$motorcycle_name]
+    )
+) {
     bookingError(
         "Invalid motorcycle selected."
     );
 }
 
-
-$price_per_day =
-    $motorcycle_prices[$motorcycle_name];
-
-$pickup_date = trim($_POST['pickup_date'] ?? '');
-
-$pickup_time = trim($_POST['pickup_time'] ?? '');
-
-$return_date = trim($_POST['return_date'] ?? '');
-
-$return_time = trim($_POST['return_time'] ?? '');
-
-$payment_method = trim($_POST['payment_method'] ?? '');
-
-$pickup_branch = trim($_POST['pickup_branch'] ?? '');
-
-$dropoff_branch = trim($_POST['dropoff_branch'] ?? '');
-
-
-/* Check required fields */
-if (
-    $motorcycle_name === '' || 
-     
-    $pickup_date === '' ||
-    $pickup_time === '' ||
-    $return_date === '' ||
-    $return_time === '' ||
-    $payment_method === '' ||
-    $pickup_branch === '' ||
-    $dropoff_branch === ''
-) {
-    bookingError(
-        "Please complete all required booking fields."
-    );
-}
 
 $price_per_day =
     $motorcycle_prices[$motorcycle_name];
@@ -105,6 +116,7 @@ $allowed_payment_methods = [
     'BPI'
 ];
 
+
 if (
     !in_array(
         $payment_method,
@@ -114,6 +126,39 @@ if (
 ) {
     bookingError(
         "Please select a valid payment method."
+    );
+}
+
+
+/* Validate pickup and drop-off branches */
+$allowed_branches = [
+    'Hibbard Avenue, Dumaguete City',
+    'Leon Kilat Mall, Bacong'
+];
+
+
+if (
+    !in_array(
+        $pickup_branch,
+        $allowed_branches,
+        true
+    )
+) {
+    bookingError(
+        "Please select a valid pickup branch."
+    );
+}
+
+
+if (
+    !in_array(
+        $dropoff_branch,
+        $allowed_branches,
+        true
+    )
+) {
+    bookingError(
+        "Please select a valid drop-off branch."
     );
 }
 
@@ -129,6 +174,7 @@ $return_datetime =
         $return_date . ' ' . $return_time
     );
 
+
 if (
     $pickup_datetime === false ||
     $return_datetime === false
@@ -138,7 +184,9 @@ if (
     );
 }
 
+
 $current_datetime = time();
+
 
 if ($pickup_datetime < $current_datetime) {
     bookingError(
@@ -146,11 +194,13 @@ if ($pickup_datetime < $current_datetime) {
     );
 }
 
+
 if ($return_datetime <= $pickup_datetime) {
     bookingError(
         "Return date and time must be after the pickup date and time."
     );
 }
+
 
 /* DRIVER'S LICENSE UPLOAD */
 
@@ -183,6 +233,7 @@ if ($file_size > 5 * 1024 * 1024) {
 /* Check if uploaded file is really an image */
 $image_info = @getimagesize($file_tmp);
 
+
 if ($image_info === false) {
 
     bookingError(
@@ -196,6 +247,7 @@ $allowed_types = [
     'image/jpeg',
     'image/png'
 ];
+
 
 if (
     !in_array(
@@ -213,6 +265,7 @@ if (
 /* Create uploads folder if needed */
 $upload_dir =
     __DIR__ . '/uploads/licenses/';
+
 
 if (!is_dir($upload_dir)) {
 
@@ -236,6 +289,7 @@ $extension =
         ? 'png'
         : 'jpg';
 
+
 $driver_license =
     uniqid(
         'license_',
@@ -243,6 +297,7 @@ $driver_license =
     ) .
     '.' .
     $extension;
+
 
 $license_path =
     $upload_dir .
@@ -289,10 +344,12 @@ try {
               AND available_units > 0
         ");
 
+
     $inventory_stmt->bind_param(
         "s",
         $motorcycle_name
     );
+
 
     $inventory_stmt->execute();
 
@@ -303,7 +360,9 @@ try {
         or has no available units.
     */
 
-    if ($inventory_stmt->affected_rows !== 1) {
+    if (
+        $inventory_stmt->affected_rows !== 1
+    ) {
 
         $inventory_stmt->close();
 
