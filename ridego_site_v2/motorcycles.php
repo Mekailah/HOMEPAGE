@@ -1,4 +1,8 @@
 <?php
+session_start();
+require_once 'db.php';
+
+$is_logged_in = isset($_SESSION['user_id']);
 $motorcycles = [
     ['name' => 'Honda Click 125 cc', 'price' => '₱629.00/Day', 'image' => 'assets/honda-click-125.png'],
     ['name' => 'Yamaha Fazzio 125cc', 'price' => '₱819.00/Day', 'image' => 'assets/yamaha-fazzio-125.png'],
@@ -13,6 +17,16 @@ $motorcycles = [
     ['name' => 'Kawasaki Ninja 1000SX', 'price' => '₱3,500.00/Day', 'image' => 'assets/kawasaki ninja.png'],
     ['name' => 'Yamaha Sniper 155', 'price' => '₱750.00/Day', 'image' => 'assets/sniper.png']
 ];
+
+$inventory_result = $conn->query(
+    "SELECT motorcycle_name, available_units FROM motorcycle_inventory"
+);
+
+$inventory = [];
+
+while ($row = $inventory_result->fetch_assoc()) {
+    $inventory[$row['motorcycle_name']] = $row['available_units'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -91,6 +105,9 @@ $motorcycles = [
                         </div>
 
                         <div class="vehicle-info">
+                            <p class="availability-count">
+                                <?= $inventory[$motorcycle['name']] ?? 0 ?>
+                            </p>
 
                             <h3>
                                 <?= htmlspecialchars($motorcycle['name']) ?>
@@ -100,9 +117,23 @@ $motorcycles = [
                                 <?= htmlspecialchars($motorcycle['price']) ?>
                             </p>
 
-                            <a href="#" class="button button-small js-book">
+                            <?php if ($is_logged_in): ?>
+
+                            <button
+                                type="button"
+                                class="button button-small js-book"
+                                data-motorcycle="<?= htmlspecialchars($motorcycle['name']) ?>"
+                                data-price="<?= htmlspecialchars(str_replace(['₱', '/Day', ','], '', $motorcycle['price'])) ?>"
+                            >
+                                RENT NOW
+                            </button>
+                            <?php else: ?>
+
+                            <a href="login.php" class="button button-small">
                                 RENT NOW
                             </a>
+
+                            <?php endif; ?>
 
                         </div>
 
@@ -188,24 +219,81 @@ $motorcycles = [
 
             <p>Fill in the details below to reserve your motorcycle.</p>
 
-            <form id="bookingForm">
+            <form id="bookingForm" method="POST" action="book.php" enctype="multipart/form-data">
 
                 <label>
                     NAME
-                    <input type="text" name="name" required>
+                    <input
+                        type="text"
+                        value="<?= htmlspecialchars($_SESSION['full_name'] ?? '') ?>"
+                        readonly
+                    >
                 </label>
 
                 <label>
                     EMAIL
-                    <input type="email" name="email" required>
+                    <input
+                        type="email"
+                        value="<?= htmlspecialchars($_SESSION['email'] ?? '') ?>"
+                        readonly
+                    >
                 </label>
 
-                <label>SELECT DATE
+                <label>
+                    DRIVER'S LICENSE
+                    <input type="file" name="driver_license" accept="image/jpeg,image/png" required>
+                </label>
+
+                <input type="hidden" name="motorcycle_name" id="bookingMotorcycle">
+                <input type="hidden" name="price_per_day" id="bookingPrice">
+
+                <label>
+                    SELECT DATE
                     <input type="date" name="pickup_date" required>
                 </label>
 
-                <label>RETURN DATE
+                <label>
+                    SELECT TIME
+                    <input type="time" name="pickup_time" required>
+                </label>
+
+                <label>
+                    RETURN DATE
                     <input type="date" name="return_date" required>
+                </label>
+
+                <label>
+                    RETURN TIME
+                    <input type="time" name="return_time" required>
+                </label>
+
+                <div class="booking-total">
+                    <p>RENTAL DAYS: <span id="rentalDays">0</span></p>
+                    <p>TOTAL: ₱<span id="bookingTotal">0.00</span></p>
+                </div>
+
+                <label>
+                    MODE OF PAYMENT
+                    <select name="payment_method" required>
+                        <option value="GCash">GCash</option>
+                        <option value="BPI">BPI</option>
+                    </select>
+                </label>
+
+                <label>
+                    PICK-UP LOCATION
+                    <select name="pickup_branch" required>
+                        <option value="Hibbard Avenue, Dumaguete City">Hibbard Avenue, Dumaguete City</option>
+                        <option value="Leon Kilat Mall, Bacong">Leon Kilat Mall, Bacong</option>
+                    </select>
+                </label>
+
+                <label>
+                    DROP-OFF LOCATION
+                    <select name="dropoff_branch" required>
+                        <option value="Hibbard Avenue, Dumaguete City">Hibbard Avenue, Dumaguete City</option>
+                        <option value="Leon Kilat Mall, Bacong">Leon Kilat Mall, Bacong</option>
+                    </select>
                 </label>
 
                 <button type="submit" class="button">

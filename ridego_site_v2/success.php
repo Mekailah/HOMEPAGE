@@ -1,9 +1,5 @@
 <?php
 
-$status  = $_GET['status'] ?? null;
-$message = $_GET['message'] ?? null;
-$id      = $_GET['id'] ?? null;
-
 require 'database/config.php';
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -15,7 +11,9 @@ if (!$id) {
 
 $pdo = getConnection();
 
-$sql = "SELECT id, full_name, email, phone FROM users WHERE id = :id";
+$sql = "SELECT id, full_name, email, phone
+        FROM users
+        WHERE id = :id";
 
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(':id', $id, PDO::PARAM_INT);
@@ -35,14 +33,19 @@ if (!$user) {
 
 <head>
     <meta charset="UTF-8">
-    <title>RIDEGO Registration Successful</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Registration Successful | RIDEGO RENTALS</title>
 </head>
 
 <body>
 
-    <h1 style="color: green;">Registration successful!</h1>
+    <h1>Registration Successful!</h1>
+
+    <p>Your RIDEGO RENTALS account has been created.</p>
 
     <table border="1" cellpadding="8" cellspacing="0">
+
         <tr>
             <th>ID</th>
             <td><?= htmlspecialchars($user['id']) ?></td>
@@ -62,12 +65,16 @@ if (!$user) {
             <th>Phone</th>
             <td><?= htmlspecialchars($user['phone']) ?></td>
         </tr>
+
     </table>
 
     <p>
-        <a href="index.php">Back to RIDEGO</a>
+        <a href="login.php">LOGIN TO YOUR ACCOUNT</a>
+    </p>
+
+    <p>
+        <a href="index.php">BACK TO HOME</a>
     </p>
 
 </body>
-
 </html>

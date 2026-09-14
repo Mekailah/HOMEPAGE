@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'login_function.php';
+require_once 'db.php';
 
 $message = '';
 $message_type = '';
@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message_type = 'error';
     } else {
 
-        $stmt = $conn->prepare("SELECT id, full_name, email, password FROM users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id, full_name, email, password, role FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
 
@@ -30,8 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['full_name'] = $user['full_name'];
                 $_SESSION['email'] = $user['email'];
+                $_SESSION['role'] = $user['role'];
 
-                header("Location: index.php");
+                if ($user['role'] === 'admin') {
+                    header("Location: admin.php");
+                } else {
+                    header("Location: index.php");
+                }
+
                 exit;
 
             } else {
@@ -220,8 +226,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="login-container">
 
     <div class="logo">
-        <a href="../index.php">
-            <img src="../assets/logo.svg" alt="RIDEGO RENTALS">
+        <a href="index.php">
+            <img src="assets/logo.svg" alt="RIDEGO RENTALS">
         </a>
     </div>
 
@@ -268,7 +274,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="register-link">
             Don't have an account?
-            <a href="../register.php">REGISTER</a>
+            <a href="register.php">REGISTER</a>
         </div>
 
     </div>

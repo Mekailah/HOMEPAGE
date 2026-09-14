@@ -1,91 +1,13 @@
 <?php
-require_once 'db.php';
 
-$message = '';
-$message_type = '';
+$status = $_GET['status'] ?? '';
+$message = $_GET['message'] ?? '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $full_name = trim($_POST['full_name']);
-    $email = trim($_POST['email']);
-    $phone = trim($_POST['phone']);
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
-
-    // Check phone number
-    if (!preg_match('/^[0-9]{11}$/', $phone)) {
-
-        $message = 'Phone number must be exactly 11 digits.';
-        $message_type = 'error';
-
-    // Check password
-    // Check password requirements
-} elseif (
-    strlen($password) < 8 ||
-    !preg_match('/[A-Z]/', $password) ||
-    !preg_match('/[a-z]/', $password) ||
-    !preg_match('/[0-9]/', $password) ||
-    !preg_match('/[^A-Za-z0-9]/', $password)
-) {
-
-    $message = 'Password must be at least 8 characters and contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol.';
-    $message_type = 'error';
-
-// Check if passwords match
-} elseif ($password !== $confirm_password) {
-
-    $message = 'Passwords do not match.';
-    $message_type = 'error';
-
-} else {
-
-        // Check if email already exists
-        $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $check->bind_param("s", $email);
-        $check->execute();
-        $check->store_result();
-
-        if ($check->num_rows > 0) {
-
-            $message = 'An account with this email already exists.';
-            $message_type = 'error';
-
-        } else {
-
-            // Securely hash the password
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-            $stmt = $conn->prepare(
-                "INSERT INTO users (full_name, email, phone, password)
-                 VALUES (?, ?, ?, ?)"
-            );
-
-            $stmt->bind_param(
-                "ssss",
-                $full_name,
-                $email,
-                $phone,
-                $hashed_password
-            );
-
-            if ($stmt->execute()) {
-                $message = 'Registration successful! You can now log in.';
-                $message_type = 'success';
-            } else {
-                $message = 'Something went wrong. Please try again.';
-                $message_type = 'error';
-            }
-
-            $stmt->close();
-        }
-
-        $check->close();
-    }
-}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -192,6 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-weight: 700;
         }
     </style>
+
 </head>
 
 <body>
@@ -223,65 +146,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p>Create your RIDEGO RENTALS account.</p>
 
         <?php if ($message): ?>
-            <div class="auth-message <?= $message_type ?>">
+
+            <div class="auth-message <?= $status === 'error' ? 'error' : 'success' ?>">
                 <?= htmlspecialchars($message) ?>
             </div>
+
         <?php endif; ?>
 
-        <form class="auth-form" method="POST">
+        <form
+            class="auth-form"
+            method="POST"
+            action="function.php"
+        >
 
             <label>
                 FULL NAME
+
                 <input
                     type="text"
                     name="full_name"
                     required
                 >
+
             </label>
 
             <label>
                 EMAIL
+
                 <input
                     type="email"
                     name="email"
                     required
                 >
+
             </label>
 
             <label>
                 PHONE NUMBER
+
                 <input
-                type="tel"
-                name="phone"
-                required
-                maxlength="11"
-                pattern="[0-9]{11}"
-                inputmode="numeric"
+                    type="tel"
+                    name="phone"
+                    required
+                    maxlength="11"
+                    pattern="[0-9]{11}"
+                    inputmode="numeric"
+                    title="Phone number must be exactly 11 digits."
                 >
+
             </label>
 
             <label>
                 PASSWORD
+
                 <input
-                type="password"
-                name="password"
-                required
-                minlength="8"
-                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}"
-                title="Password must be at least 8 characters and contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol."
+                    type="password"
+                    name="password"
+                    required
+                    minlength="8"
+                    pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}"
+                    title="Password must be at least 8 characters and contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol."
                 >
+
             </label>
 
             <label>
                 CONFIRM PASSWORD
+
                 <input
                     type="password"
                     name="confirm_password"
                     required
                 >
+
             </label>
 
-            <button type="submit" class="button button-hero">
+            <button
+                type="submit"
+                name="register"
+                class="button button-hero"
+            >
                 REGISTER
             </button>
 
@@ -297,4 +241,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </main>
 
 </body>
+
 </html>
