@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 require_once 'db.php';
 
@@ -7,47 +8,113 @@ $message_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
+    $email =
+        trim($_POST['email'] ?? '');
 
-    if (empty($email) || empty($password)) {
-        $message = 'Please enter your email and password.';
-        $message_type = 'error';
+    $password =
+        $_POST['password'] ?? '';
+
+    if (
+        $email === '' ||
+        $password === ''
+    ) {
+        $message =
+            'Please enter your email and password.';
+
+        $message_type =
+            'error';
+
     } else {
 
-        $stmt = $conn->prepare("SELECT id, full_name, email, password, role FROM users WHERE email = ?");
-        $stmt->bind_param("s", $email);
+        $stmt =
+            $conn->prepare("
+                SELECT
+                    id,
+                    full_name,
+                    email,
+                    password,
+                    role
+                FROM users
+                WHERE email = ?
+                LIMIT 1
+            ");
+
+        $stmt->bind_param(
+            "s",
+            $email
+        );
+
         $stmt->execute();
 
-        $result = $stmt->get_result();
+        $result =
+            $stmt->get_result();
 
         if ($result->num_rows === 1) {
 
-            $user = $result->fetch_assoc();
+            $user =
+                $result->fetch_assoc();
 
-            if (password_verify($password, $user['password'])) {
+            if (
+                password_verify(
+                    $password,
+                    $user['password']
+                )
+            ) {
 
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['full_name'] = $user['full_name'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['role'] = $user['role'];
+                /*
+                    Create a fresh session ID
+                    after successful login.
+                */
+                session_regenerate_id(true);
+
+                $_SESSION['user_id'] =
+                    (int) $user['id'];
+
+                $_SESSION['full_name'] =
+                    $user['full_name'];
+
+                $_SESSION['email'] =
+                    $user['email'];
+
+                $_SESSION['role'] =
+                    $user['role'];
+
+
+                $stmt->close();
+                $conn->close();
+
 
                 if ($user['role'] === 'admin') {
-                    header("Location: admin.php");
+
+                    header(
+                        "Location: admin.php"
+                    );
+
                 } else {
-                    header("Location: index.php");
+
+                    header(
+                        "Location: index.php"
+                    );
                 }
 
                 exit;
 
             } else {
-                $message = 'Incorrect email or password.';
-                $message_type = 'error';
+
+                $message =
+                    'Incorrect email or password.';
+
+                $message_type =
+                    'error';
             }
 
         } else {
-            $message = 'Incorrect email or password.';
-            $message_type = 'error';
+
+            $message =
+                'Incorrect email or password.';
+
+            $message_type =
+                'error';
         }
 
         $stmt->close();
@@ -57,18 +124,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Login | RIDEGO RENTALS</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>
+        Login | RIDEGO RENTALS
+    </title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap"
+        rel="stylesheet"
+    >
 
     <style>
+
         :root {
             --dark: #0E1B29;
             --teal: #3C8D8A;
@@ -182,6 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .message.error {
             background: #f3f3f3;
+            color: #b42318;
         }
 
         .register-link {
@@ -210,6 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @media (max-width: 500px) {
+
             body {
                 padding: 20px;
             }
@@ -218,7 +307,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 padding: 30px 22px;
             }
         }
+
     </style>
+
 </head>
 
 <body>
@@ -226,64 +317,104 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="login-container">
 
     <div class="logo">
+
         <a href="index.php">
-            <img src="assets/logo.svg" alt="RIDEGO RENTALS">
+
+            <img
+                src="assets/logo.svg"
+                alt="RIDEGO RENTALS"
+            >
+
         </a>
+
     </div>
 
     <div class="login-card">
 
         <h1>LOGIN</h1>
 
-        <p>Welcome back to RIDEGO RENTALS.</p>
+        <p>
+            Welcome back to RIDEGO RENTALS.
+        </p>
 
         <?php if ($message): ?>
-            <div class="message <?= htmlspecialchars($message_type) ?>">
+
+            <div
+                class="message <?= htmlspecialchars($message_type) ?>"
+            >
                 <?= htmlspecialchars($message) ?>
             </div>
+
         <?php endif; ?>
 
-        <form method="POST" action="">
+        <form
+            method="POST"
+            action=""
+        >
 
             <div class="form-group">
-                <label for="email">EMAIL</label>
+
+                <label for="email">
+                    EMAIL
+                </label>
+
                 <input
                     type="email"
                     id="email"
                     name="email"
                     required
+                    autocomplete="email"
                     value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
                 >
+
             </div>
 
             <div class="form-group">
-                <label for="password">PASSWORD</label>
+
+                <label for="password">
+                    PASSWORD
+                </label>
+
                 <input
                     type="password"
                     id="password"
                     name="password"
                     required
+                    autocomplete="current-password"
                 >
+
             </div>
 
-            <button type="submit" class="login-button">
+            <button
+                type="submit"
+                class="login-button"
+            >
                 LOGIN
             </button>
 
         </form>
 
         <div class="register-link">
+
             Don't have an account?
-            <a href="register.php">REGISTER</a>
+
+            <a href="register.php">
+                REGISTER
+            </a>
+
         </div>
 
     </div>
 
-    <a href="index.php" class="back-home">
+    <a
+        href="index.php"
+        class="back-home"
+    >
         ← BACK TO HOME
     </a>
 
 </div>
 
 </body>
+
 </html>
