@@ -87,6 +87,8 @@ $bookings = $conn->query("
         bookings.id,
         users.full_name,
         users.email,
+        users.phone,
+        bookings.driver_license,
         bookings.motorcycle_name,
         bookings.pickup_date,
         bookings.pickup_time,
@@ -351,6 +353,14 @@ $inventory_list = $conn->query("
         }
 
 
+
+        /* LICENSE BUTTON */
+        .bookings-section .license-button {
+            display:inline-block; padding:7px 12px; border-radius:8px;
+            background:#0E1B29; color:#FFFFFF; text-decoration:none;
+            font-size:11px; font-weight:700;
+        }
+        .bookings-section .license-button:hover { background:#3C8D8A; }
 
         /* DELETE BUTTON */
         .bookings-section .delete-button {
@@ -798,7 +808,8 @@ $inventory_list = $conn->query("
         <table>
             <thead>
                 <tr>
-                    <th>ID</th><th>CUSTOMER</th><th>EMAIL</th><th>MOTORCYCLE</th>
+                    <th>ID</th><th>CUSTOMER</th><th>EMAIL</th><th>PHONE</th>
+                    <th>DRIVER'S LICENSE</th><th>MOTORCYCLE</th>
                     <th>PICK-UP</th><th>RETURN</th><th>PAYMENT</th>
                     <th>PICK-UP LOCATION</th><th>DROP-OFF LOCATION</th>
                     <th>STATUS</th><th>ACTION</th>
@@ -811,6 +822,18 @@ $inventory_list = $conn->query("
                         <td><?= htmlspecialchars($booking['id']) ?></td>
                         <td><?= htmlspecialchars($booking['full_name']) ?></td>
                         <td><?= htmlspecialchars($booking['email']) ?></td>
+                        <td><?= htmlspecialchars($booking['phone']) ?></td>
+                        <td>
+                            <?php if (!empty($booking['driver_license'])): ?>
+                                <a class="license-button"
+                                   href="<?= htmlspecialchars('uploads/licenses/' . rawurlencode(basename($booking['driver_license']))) ?>"
+                                   target="_blank" rel="noopener noreferrer">
+                                    VIEW LICENSE
+                                </a>
+                            <?php else: ?>
+                                No license
+                            <?php endif; ?>
+                        </td>
                         <td><?= htmlspecialchars($booking['motorcycle_name']) ?></td>
                         <td>
                             <?= htmlspecialchars($booking['pickup_date']) ?>
@@ -851,7 +874,7 @@ $inventory_list = $conn->query("
                 <?php endwhile; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="11">No bookings found.</td>
+                    <td colspan="13">No bookings found.</td>
                 </tr>
             <?php endif; ?>
             </tbody>

@@ -24,20 +24,30 @@ if ($booking_id <= 0) {
     exit;
 }
 
+$license_path = null;
+
 try {
 
     $conn->begin_transaction();
 
+
+    /* GET BOOKING DETAILS */
+
     $stmt = $conn->prepare("
         SELECT
             motorcycle_name,
-            status
+            status,
+            driver_license
         FROM bookings
         WHERE id = ?
         FOR UPDATE
     ");
 
-    $stmt->bind_param("i", $booking_id);
+    $stmt->bind_param(
+        "i",
+        $booking_id
+    );
+
     $stmt->execute();
 
     $result = $stmt->get_result();
@@ -45,7 +55,9 @@ try {
 
     $stmt->close();
 
+
     if (!$booking) {
+
         $conn->rollback();
         $conn->close();
 
@@ -53,8 +65,39 @@ try {
         exit;
     }
 
-    $motorcycle_name = $booking['motorcycle_name'];
-    $status = $booking['status'];
+
+    $motorcycle_name =
+        $booking['motorcycle_name'];
+
+    $status =
+        $booking['status'];
+
+    $driver_license =
+        $booking['driver_license'];
+
+
+    /*
+        Prepare license path.
+
+        basename() prevents directory traversal.
+    */
+
+    if ($driver_license !== '') {
+
+        $safe_license_name =
+            basename($driver_license);
+
+        $license_path =
+            __DIR__ .
+            '/uploads/licenses/' .
+            $safe_license_name;
+    }
+
+
+    /*
+        RESTORE INVENTORY IF BOOKING
+        WAS PENDING OR CONFIRMED
+    */
 
     if (
         $status === 'Pending' ||
@@ -80,6 +123,9 @@ try {
         $stmt->close();
     }
 
+
+    /* DELETE BOOKING */
+
     $stmt = $conn->prepare("
         DELETE FROM bookings
         WHERE id = ?
@@ -92,8 +138,11 @@ try {
 
     $stmt->execute();
 
+
     if ($stmt->affected_rows !== 1) {
+
         $stmt->close();
+
         $conn->rollback();
         $conn->close();
 
@@ -101,20 +150,54 @@ try {
         exit;
     }
 
+
     $stmt->close();
+
+
+    /*
+        Commit database changes first.
+    */
 
     $conn->commit();
     $conn->close();
 
+
+    /*
+        Remove uploaded driver's license
+        only after successful database commit.
+    */
+
+    if (
+        $license_path !== null &&
+        is_file($license_path)
+    ) {
+
+        if (!unlink($license_path)) {
+
+            error_log(
+                "Unable to delete driver's license file: " .
+                $license_path
+            );
+        }
+    }
+
+
     header("Location: admin.php?delete=success");
     exit;
+
 
 } catch (Throwable $e) {
 
     $conn->rollback();
     $conn->close();
 
+    error_log(
+        "Delete booking error: " .
+        $e->getMessage()
+    );
+
     header("Location: admin.php?delete=error");
     exit;
 }
+
 ?>
