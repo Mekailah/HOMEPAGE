@@ -2,6 +2,9 @@
 uploads/licenses/*
 !uploads/licenses/.gitkeep
 
+uploads/motorcycles/*
+!uploads/motorcycles/.gitkeep
+
 # Operating system files
 .DS_Store
 Thumbs.db

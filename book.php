@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+
 require_once 'db.php';
 
 date_default_timezone_set('Asia/Manila');
@@ -13,7 +14,6 @@ function bookingError(string $message): void
         "Location: index.php?booking=error&message=" .
         urlencode($message)
     );
-
     exit;
 }
 
@@ -78,36 +78,12 @@ if (
 }
 
 
-/* Validate motorcycle and get price from server */
-$motorcycle_prices = [
-    'Honda Click 125 cc' => 629.00,
-    'Yamaha Fazzio 125cc' => 819.00,
-    'Yamaha AEROX 155 CC' => 799.00,
-    'Honda Beat 110' => 449.00,
-    'Honda ADV 160' => 900.00,
-    'Yamaha PG-1' => 800.00,
-    'Honda NAVi' => 600.00,
-    'Yamaha NMAX ABS' => 850.00,
-    'Honda XRM 125' => 600.00,
-    'Yamaha Vino Classic' => 650.00,
-    'Kawasaki Ninja 1000SX' => 3500.00,
-    'Yamaha Sniper 155' => 750.00
-];
-
-
-if (
-    !isset(
-        $motorcycle_prices[$motorcycle_name]
-    )
-) {
+/* Validate motorcycle name length */
+if (mb_strlen($motorcycle_name) > 100) {
     bookingError(
         "Invalid motorcycle selected."
     );
 }
-
-
-$price_per_day =
-    $motorcycle_prices[$motorcycle_name];
 
 
 /* Validate payment method */
@@ -115,7 +91,6 @@ $allowed_payment_methods = [
     'GCash',
     'BPI'
 ];
-
 
 if (
     !in_array(
@@ -136,7 +111,6 @@ $allowed_branches = [
     'Leon Kilat Mall, Bacong'
 ];
 
-
 if (
     !in_array(
         $pickup_branch,
@@ -148,7 +122,6 @@ if (
         "Please select a valid pickup branch."
     );
 }
-
 
 if (
     !in_array(
@@ -162,6 +135,8 @@ if (
     );
 }
 
+
+/* Validate booking time */
 function isValidBookingTime(string $time): bool
 {
     if (!preg_match('/^\d{2}:\d{2}$/', $time)) {
@@ -203,6 +178,7 @@ function isValidBookingTime(string $time): bool
     return true;
 }
 
+
 if (
     !isValidBookingTime($pickup_time) ||
     !isValidBookingTime($return_time)
@@ -211,6 +187,7 @@ if (
         "Pickup and return times must be between 6:00 AM and 10:00 PM in 30-minute intervals."
     );
 }
+
 
 /* Validate booking date and time */
 $pickup_datetime =
@@ -223,7 +200,6 @@ $return_datetime =
         $return_date . ' ' . $return_time
     );
 
-
 if (
     $pickup_datetime === false ||
     $return_datetime === false
@@ -233,16 +209,13 @@ if (
     );
 }
 
-
 $current_datetime = time();
-
 
 if ($pickup_datetime < $current_datetime) {
     bookingError(
         "Pickup date and time cannot be in the past."
     );
 }
-
 
 if ($return_datetime <= $pickup_datetime) {
     bookingError(
@@ -252,7 +225,6 @@ if ($return_datetime <= $pickup_datetime) {
 
 
 /* DRIVER'S LICENSE UPLOAD */
-
 if (
     !isset($_FILES['driver_license']) ||
     $_FILES['driver_license']['error'] !== UPLOAD_ERR_OK
@@ -261,7 +233,6 @@ if (
         "Please upload a picture of your driver's license."
     );
 }
-
 
 $file_tmp =
     $_FILES['driver_license']['tmp_name'];
@@ -272,7 +243,6 @@ $file_size =
 
 /* Maximum 5MB */
 if ($file_size > 5 * 1024 * 1024) {
-
     bookingError(
         "Driver's license image must be 5MB or smaller."
     );
@@ -280,11 +250,9 @@ if ($file_size > 5 * 1024 * 1024) {
 
 
 /* Check if uploaded file is really an image */
-$image_info = @getimagesize($file_tmp);
-
+$image_info = getimagesize($file_tmp);
 
 if ($image_info === false) {
-
     bookingError(
         "Please upload a valid driver's license image."
     );
@@ -293,18 +261,11 @@ if ($image_info === false) {
 
 /* Only allow JPG and PNG */
 $allowed_types = [
-    'image/jpeg',
-    'image/png'
+    IMAGETYPE_JPEG => 'jpg',
+    IMAGETYPE_PNG => 'png'
 ];
 
-
-if (
-    !in_array(
-        $image_info['mime'],
-        $allowed_types,
-        true
-    )
-) {
+if (!isset($allowed_types[$image_info[2]])) {
     bookingError(
         "Only JPG and PNG images are allowed."
     );
@@ -315,9 +276,7 @@ if (
 $upload_dir =
     __DIR__ . '/uploads/licenses/';
 
-
 if (!is_dir($upload_dir)) {
-
     if (
         !mkdir(
             $upload_dir,
@@ -334,19 +293,13 @@ if (!is_dir($upload_dir)) {
 
 /* Generate safe unique filename */
 $extension =
-    $image_info['mime'] === 'image/png'
-        ? 'png'
-        : 'jpg';
-
+    $allowed_types[$image_info[2]];
 
 $driver_license =
-    uniqid(
-        'license_',
-        true
-    ) .
+    'license_' .
+    bin2hex(random_bytes(8)) .
     '.' .
     $extension;
-
 
 $license_path =
     $upload_dir .
@@ -369,66 +322,123 @@ if (
 /*
     BOOKING + INVENTORY TRANSACTION
 
-    Both operations must succeed together.
-*/
+    The motorcycle price and availability are read
+    directly from motorcycle_inventory.
 
+    This means motorcycles added by the owner can
+    automatically be booked without editing book.php.
+*/
 try {
 
-    $conn->begin_transaction();
+    if (!$conn->begin_transaction()) {
+        throw new RuntimeException(
+            "Unable to start database transaction."
+        );
+    }
 
 
     /*
-        Reserve one motorcycle.
-
-        available_units > 0 prevents the
-        value from becoming negative.
+        Lock the selected motorcycle row while the
+        booking is being processed.
     */
+    $motorcycle_stmt =
+        $conn->prepare("
+            SELECT
+                price_per_day,
+                available_units
+            FROM motorcycle_inventory
+            WHERE motorcycle_name = ?
+              AND is_active = 1
+            LIMIT 1
+            FOR UPDATE
+        ");
 
+    if (!$motorcycle_stmt) {
+        throw new RuntimeException(
+            "Unable to prepare motorcycle lookup."
+        );
+    }
+
+    $motorcycle_stmt->bind_param(
+        "s",
+        $motorcycle_name
+    );
+
+    if (!$motorcycle_stmt->execute()) {
+        $motorcycle_stmt->close();
+
+        throw new RuntimeException(
+            "Unable to check motorcycle."
+        );
+    }
+
+    $motorcycle_result =
+        $motorcycle_stmt->get_result();
+
+    $motorcycle =
+        $motorcycle_result->fetch_assoc();
+
+    $motorcycle_stmt->close();
+
+
+    /* Motorcycle must exist and still be active */
+    if (!$motorcycle) {
+        throw new RuntimeException(
+            "INVALID_MOTORCYCLE"
+        );
+    }
+
+
+    /* Get the trusted price directly from the database */
+    $price_per_day =
+        (float) $motorcycle['price_per_day'];
+
+
+    /* Check availability */
+    if ((int) $motorcycle['available_units'] < 1) {
+        throw new RuntimeException(
+            "MOTORCYCLE_UNAVAILABLE"
+        );
+    }
+
+
+    /* Reserve one motorcycle */
     $inventory_stmt =
         $conn->prepare("
             UPDATE motorcycle_inventory
             SET available_units =
                 available_units - 1
             WHERE motorcycle_name = ?
+              AND is_active = 1
               AND available_units > 0
         ");
 
+    if (!$inventory_stmt) {
+        throw new RuntimeException(
+            "Unable to prepare inventory update."
+        );
+    }
 
     $inventory_stmt->bind_param(
         "s",
         $motorcycle_name
     );
 
-
-    $inventory_stmt->execute();
-
-
-    /*
-        If no row was changed,
-        the motorcycle either does not exist
-        or has no available units.
-    */
-
-    if (
-        $inventory_stmt->affected_rows !== 1
-    ) {
-
+    if (!$inventory_stmt->execute()) {
         $inventory_stmt->close();
 
-        $conn->rollback();
-
-
-        /* Remove uploaded license because booking failed */
-        if (file_exists($license_path)) {
-            unlink($license_path);
-        }
-
-
-        bookingError(
-            "Sorry, this motorcycle is currently unavailable."
+        throw new RuntimeException(
+            "Unable to update inventory."
         );
     }
 
+    if ($inventory_stmt->affected_rows !== 1) {
+        $inventory_stmt->close();
+
+        throw new RuntimeException(
+            "MOTORCYCLE_UNAVAILABLE"
+        );
+    }
 
     $inventory_stmt->close();
 
@@ -454,6 +464,11 @@ try {
             (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
+    if (!$stmt) {
+        throw new RuntimeException(
+            "Unable to prepare booking."
+        );
+    }
 
     $stmt->bind_param(
         "issdsssssss",
@@ -470,29 +485,43 @@ try {
         $dropoff_branch
     );
 
+    if (!$stmt->execute()) {
+        $stmt->close();
 
-    $stmt->execute();
+        throw new RuntimeException(
+            "Unable to save booking."
+        );
+    }
 
     $stmt->close();
 
 
     /* Everything succeeded */
-    $conn->commit();
+    if (!$conn->commit()) {
+        throw new RuntimeException(
+            "Unable to complete booking."
+        );
+    }
 
     $conn->close();
-
 
     header(
         "Location: index.php?booking=success"
     );
-
     exit;
 
 
 } catch (Throwable $e) {
 
     /* Undo database changes */
-    $conn->rollback();
+    try {
+        $conn->rollback();
+    } catch (Throwable $rollback_error) {
+        error_log(
+            "Booking rollback error: " .
+            $rollback_error->getMessage()
+        );
+    }
 
 
     /* Remove uploaded license if booking failed */
@@ -501,8 +530,28 @@ try {
     }
 
 
+    error_log(
+        "Booking error: " .
+        $e->getMessage()
+    );
+
+
+    $error_message = $e->getMessage();
+
     $conn->close();
 
+
+    if ($error_message === 'INVALID_MOTORCYCLE') {
+        bookingError(
+            "Invalid motorcycle selected."
+        );
+    }
+
+    if ($error_message === 'MOTORCYCLE_UNAVAILABLE') {
+        bookingError(
+            "Sorry, this motorcycle is currently unavailable."
+        );
+    }
 
     bookingError(
         "Booking failed. Please try again."

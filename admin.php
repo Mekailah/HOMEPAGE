@@ -19,6 +19,22 @@ $inventory_updated =
     isset($_GET['inventory']) &&
     $_GET['inventory'] === 'updated';
 
+$motorcycle_added =
+    isset($_GET['motorcycle']) &&
+    $_GET['motorcycle'] === 'added';
+
+$motorcycle_error =
+    isset($_GET['motorcycle']) &&
+    $_GET['motorcycle'] === 'error';
+
+$motorcycle_removed =
+    isset($_GET['motorcycle']) &&
+    $_GET['motorcycle'] === 'removed';
+
+$motorcycle_remove_error =
+    isset($_GET['motorcycle']) &&
+    $_GET['motorcycle'] === 'remove_error';
+
 $inventory_error =
     isset($_GET['inventory']) &&
     $_GET['inventory'] === 'error';
@@ -75,6 +91,7 @@ $total_bookings =
 $total_available_result = $conn->query("
     SELECT SUM(available_units) AS total
     FROM motorcycle_inventory
+    WHERE is_active = 1
 ");
 
 $total_available =
@@ -113,6 +130,7 @@ $inventory_list = $conn->query("
         total_units,
         available_units
     FROM motorcycle_inventory
+    WHERE is_active = 1
     ORDER BY motorcycle_name ASC
 ");
 ?>
@@ -460,6 +478,94 @@ $inventory_list = $conn->query("
             opacity: 0.9;
         }
 
+
+        /* REMOVE MOTORCYCLE MODAL */
+
+        .remove-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(14, 27, 41, 0.72);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .remove-modal-overlay.show {
+            display: flex;
+        }
+
+        .remove-modal {
+            width: 100%;
+            max-width: 430px;
+            background: #FFFFFF;
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+            text-align: center;
+        }
+
+        .remove-modal-icon {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: #fff1f0;
+            color: #b42318;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .remove-modal h3 {
+            margin: 0 0 10px;
+            font-size: 20px;
+            color: #0E1B29;
+        }
+
+        .remove-modal p {
+            margin: 0 0 22px;
+            color: #52606d;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .remove-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .remove-modal-actions button {
+            min-width: 120px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 9px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .remove-cancel-button {
+            background: #e9eef2;
+            color: #0E1B29;
+        }
+
+        .remove-confirm-button {
+            background: #b42318;
+            color: #FFFFFF;
+        }
+
+        .remove-cancel-button:hover,
+        .remove-confirm-button:hover {
+            opacity: 0.9;
+        }
+
+
         /* MOBILE */
 
         @media (max-width: 700px) {
@@ -618,6 +724,67 @@ $inventory_list = $conn->query("
 
 
 
+    <!-- MOTORCYCLE ADDED SUCCESS MESSAGE -->
+
+    <?php if ($motorcycle_added): ?>
+
+        <div
+            id="motorcycleAdded"
+            style="
+                background:#3C8D8A;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Motorcycle added successfully!
+        </div>
+
+    <?php endif; ?>
+
+
+    <!-- MOTORCYCLE ERROR MESSAGE -->
+
+    <?php if ($motorcycle_error): ?>
+
+        <div
+            id="motorcycleError"
+            style="
+                background:#b42318;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Something went wrong while adding the motorcycle.
+        </div>
+
+    <?php endif; ?>
+
+
+    <!-- MOTORCYCLE REMOVED SUCCESS MESSAGE -->
+
+    <?php if ($motorcycle_removed): ?>
+        <div id="motorcycleRemoved" style="background:#3C8D8A;color:#FFFFFF;padding:12px 16px;border-radius:10px;margin-bottom:20px;text-align:center;font-size:13px;font-weight:700;">
+            Motorcycle removed successfully!
+        </div>
+    <?php endif; ?>
+
+    <?php if ($motorcycle_remove_error): ?>
+        <div id="motorcycleRemoveError" style="background:#b42318;color:#FFFFFF;padding:12px 16px;border-radius:10px;margin-bottom:20px;text-align:center;font-size:13px;font-weight:700;">
+            Something went wrong while removing the motorcycle.
+        </div>
+    <?php endif; ?>
+
+
     <!-- DELETE SUCCESS MESSAGE -->
 
     <?php if ($delete_success): ?>
@@ -686,6 +853,18 @@ $inventory_list = $conn->query("
                 document.getElementById('inventoryError');
 
 
+            const motorcycleAdded =
+                document.getElementById('motorcycleAdded');
+
+            const motorcycleError =
+                document.getElementById('motorcycleError');
+
+            const motorcycleRemoved =
+                document.getElementById('motorcycleRemoved');
+
+            const motorcycleRemoveError =
+                document.getElementById('motorcycleRemoveError');
+
             const deleteSuccess =
                 document.getElementById('deleteSuccess');
 
@@ -713,6 +892,21 @@ $inventory_list = $conn->query("
                 inventoryError.style.display = 'none';
             }
 
+            if (motorcycleAdded) {
+                motorcycleAdded.style.display = 'none';
+            }
+
+            if (motorcycleError) {
+                motorcycleError.style.display = 'none';
+            }
+
+            if (motorcycleRemoved) {
+                motorcycleRemoved.style.display = 'none';
+            }
+
+            if (motorcycleRemoveError) {
+                motorcycleRemoveError.style.display = 'none';
+            }
 
             if (deleteSuccess) {
                 deleteSuccess.style.display = 'none';
@@ -893,6 +1087,104 @@ $inventory_list = $conn->query("
         MOTORCYCLE INVENTORY
     </h2>
 
+    <form
+        method="POST"
+        action="add_motorcycle.php"
+        enctype="multipart/form-data"
+        style="
+            display:grid;
+            grid-template-columns:repeat(4, 1fr);
+            gap:12px;
+            margin-bottom:20px;
+            align-items:end;
+        "
+    >
+        <div>
+            <label style="font-size:12px; font-weight:700;">
+                MOTORCYCLE NAME
+            </label>
+
+            <input
+                type="text"
+                name="motorcycle_name"
+                maxlength="100"
+                required
+                style="
+                    width:100%;
+                    padding:8px 10px;
+                    border:1px solid #cccccc;
+                    border-radius:8px;
+                    font-family:'Poppins', sans-serif;
+                "
+            >
+        </div>
+
+        <div>
+            <label style="font-size:12px; font-weight:700;">
+                PRICE / DAY
+            </label>
+
+            <input
+                type="number"
+                name="price_per_day"
+                min="1"
+                step="0.01"
+                required
+                style="
+                    width:100%;
+                    padding:8px 10px;
+                    border:1px solid #cccccc;
+                    border-radius:8px;
+                    font-family:'Poppins', sans-serif;
+                "
+            >
+        </div>
+
+        <div>
+            <label style="font-size:12px; font-weight:700;">
+                TOTAL UNITS
+            </label>
+
+            <input
+                type="number"
+                name="total_units"
+                min="0"
+                required
+                style="
+                    width:100%;
+                    padding:8px 10px;
+                    border:1px solid #cccccc;
+                    border-radius:8px;
+                    font-family:'Poppins', sans-serif;
+                "
+            >
+        </div>
+
+        <div>
+            <label style="font-size:12px; font-weight:700;">
+                IMAGE
+            </label>
+
+            <input
+                type="file"
+                name="motorcycle_image"
+                accept="image/jpeg,image/png"
+                required
+                style="
+                    width:100%;
+                    font-family:'Poppins', sans-serif;
+                    font-size:12px;
+                "
+            >
+        </div>
+
+        <div style="grid-column:1 / -1;">
+            <button type="submit">
+                ADD MOTORCYCLE
+            </button>
+        </div>
+    </form>
+
     <table>
 
         <thead>
@@ -961,25 +1253,37 @@ $inventory_list = $conn->query("
                     </td>
 
                     <td>
-                        <form
-                            id="<?= htmlspecialchars(
-                                $inventory_form_id
-                            ) ?>"
-                            method="POST"
-                            action="update_inventory.php"
-                        >
-                            <input
-                                type="hidden"
-                                name="inventory_id"
-                                value="<?= htmlspecialchars(
-                                    $motorcycle['id']
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <form
+                                id="<?= htmlspecialchars(
+                                    $inventory_form_id
                                 ) ?>"
+                                method="POST"
+                                action="update_inventory.php"
+                                style="margin:0;"
                             >
+                                <input
+                                    type="hidden"
+                                    name="inventory_id"
+                                    value="<?= htmlspecialchars(
+                                        $motorcycle['id']
+                                    ) ?>"
+                                >
 
-                            <button type="submit">
-                                SAVE
+                                <button type="submit">
+                                    SAVE
+                                </button>
+                            </form>
+
+                            <button
+                                type="button"
+                                class="delete-button js-remove-motorcycle"
+                                data-inventory-id="<?= htmlspecialchars($motorcycle['id']) ?>"
+                                data-motorcycle-name="<?= htmlspecialchars($motorcycle['motorcycle_name']) ?>"
+                            >
+                                REMOVE
                             </button>
-                        </form>
+                        </div>
                     </td>
 
                 </tr>
@@ -1006,6 +1310,49 @@ $inventory_list = $conn->query("
 </main>
 
 
+
+
+<div id="removeMotorcycleModal" class="remove-modal-overlay" aria-hidden="true">
+    <div class="remove-modal" role="dialog" aria-modal="true" aria-labelledby="removeMotorcycleTitle">
+        <div class="remove-modal-icon">!</div>
+
+        <h3 id="removeMotorcycleTitle">Remove Motorcycle?</h3>
+
+        <p id="removeMotorcycleText">
+            This motorcycle will be removed from the customer catalog.
+        </p>
+
+        <div class="remove-modal-actions">
+            <button
+                type="button"
+                id="cancelRemoveMotorcycle"
+                class="remove-cancel-button"
+            >
+                CANCEL
+            </button>
+
+            <form
+                id="removeMotorcycleForm"
+                method="POST"
+                action="remove_motorcycle.php"
+            >
+                <input
+                    type="hidden"
+                    id="removeMotorcycleId"
+                    name="inventory_id"
+                    value=""
+                >
+
+                <button
+                    type="submit"
+                    class="remove-confirm-button"
+                >
+                    YES, REMOVE
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 
 
 <div id="deleteModal" class="delete-modal-overlay" aria-hidden="true">
@@ -1051,6 +1398,67 @@ $inventory_list = $conn->query("
 </div>
 
 <script>
+    const removeMotorcycleModal =
+        document.getElementById('removeMotorcycleModal');
+
+    const removeMotorcycleId =
+        document.getElementById('removeMotorcycleId');
+
+    const removeMotorcycleText =
+        document.getElementById('removeMotorcycleText');
+
+    const cancelRemoveMotorcycle =
+        document.getElementById('cancelRemoveMotorcycle');
+
+    document
+        .querySelectorAll('.js-remove-motorcycle')
+        .forEach(function (button) {
+            button.addEventListener('click', function () {
+                const inventoryId =
+                    button.dataset.inventoryId || '';
+
+                const motorcycleName =
+                    button.dataset.motorcycleName || 'this motorcycle';
+
+                removeMotorcycleId.value = inventoryId;
+
+                removeMotorcycleText.textContent =
+                    'Remove ' +
+                    motorcycleName +
+                    ' from the customer catalog? Existing booking records will stay safe.';
+
+                removeMotorcycleModal.classList.add('show');
+                removeMotorcycleModal.setAttribute(
+                    'aria-hidden',
+                    'false'
+                );
+            });
+        });
+
+    function closeRemoveMotorcycleModal() {
+        removeMotorcycleModal.classList.remove('show');
+        removeMotorcycleModal.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+        removeMotorcycleId.value = '';
+    }
+
+    cancelRemoveMotorcycle.addEventListener(
+        'click',
+        closeRemoveMotorcycleModal
+    );
+
+    removeMotorcycleModal.addEventListener(
+        'click',
+        function (event) {
+            if (event.target === removeMotorcycleModal) {
+                closeRemoveMotorcycleModal();
+            }
+        }
+    );
+
+
     const deleteModal =
         document.getElementById('deleteModal');
 
@@ -1119,11 +1527,14 @@ $inventory_list = $conn->query("
     document.addEventListener(
         'keydown',
         function (event) {
-            if (
-                event.key === 'Escape' &&
-                deleteModal.classList.contains('show')
-            ) {
-                closeDeleteModal();
+            if (event.key === 'Escape') {
+                if (removeMotorcycleModal.classList.contains('show')) {
+                    closeRemoveMotorcycleModal();
+                }
+
+                if (deleteModal.classList.contains('show')) {
+                    closeDeleteModal();
+                }
             }
         }
     );

@@ -3,30 +3,29 @@ session_start();
 require_once 'db.php';
 
 $is_logged_in = isset($_SESSION['user_id']);
-$motorcycles = [
-    ['name' => 'Honda Click 125 cc', 'price' => '₱629.00/Day', 'image' => 'assets/honda-click-125.png'],
-    ['name' => 'Yamaha Fazzio 125cc', 'price' => '₱819.00/Day', 'image' => 'assets/yamaha-fazzio-125.png'],
-    ['name' => 'Yamaha AEROX 155 CC', 'price' => '₱799.00/Day', 'image' => 'assets/yamaha-aerox-155.png'],
-    ['name' => 'Honda Beat 110', 'price' => '₱449.00/Day', 'image' => 'assets/honda-beat-110.png'],
-    ['name' => 'Honda ADV 160', 'price' => '₱900.00/Day', 'image' => 'assets/adv.png'],
-    ['name' => 'Yamaha PG-1', 'price' => '₱800.00/Day', 'image' => 'assets/pg1.png'],
-    ['name' => 'Honda NAVi', 'price' => '₱600.00/Day', 'image' => 'assets/navi.png'],
-    ['name' => 'Yamaha NMAX ABS', 'price' => '₱850.00/Day', 'image' => 'assets/nmax.png'],
-    ['name' => 'Honda XRM 125', 'price' => '₱600.00/Day', 'image' => 'assets/xrm.png'],
-    ['name' => 'Yamaha Vino Classic', 'price' => '₱650.00/Day', 'image' => 'assets/yamaha vino.png'],
-    ['name' => 'Kawasaki Ninja 1000SX', 'price' => '₱3,500.00/Day', 'image' => 'assets/kawasaki ninja.png'],
-    ['name' => 'Yamaha Sniper 155', 'price' => '₱750.00/Day', 'image' => 'assets/sniper.png']
-];
 
-$inventory_result = $conn->query(
-    "SELECT motorcycle_name, available_units FROM motorcycle_inventory"
-);
+$motorcycles = [];
 
-$inventory = [];
+$stmt = $conn->prepare("
+    SELECT
+        motorcycle_name,
+        price_per_day,
+        image_path,
+        available_units
+    FROM motorcycle_inventory
+    WHERE is_active = 1
+    ORDER BY motorcycle_name ASC
+");
 
-while ($row = $inventory_result->fetch_assoc()) {
-    $inventory[$row['motorcycle_name']] = $row['available_units'];
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+while ($row = $result->fetch_assoc()) {
+    $motorcycles[] = $row;
 }
+
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -59,11 +58,11 @@ while ($row = $inventory_result->fetch_assoc()) {
         }
 
         input[name="pickup_date"],
-            input[name="return_date"] {
-                width: 220px;
-                max-width: 100%;
-                box-sizing: border-box;
-            }
+        input[name="return_date"] {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
 
 
         .time-picker {
@@ -198,23 +197,23 @@ while ($row = $inventory_result->fetch_assoc()) {
                         <div class="vehicle-image">
 
                             <img
-                                src="<?= htmlspecialchars($motorcycle['image']) ?>"
-                                alt="<?= htmlspecialchars($motorcycle['name']) ?>"
+                                src="<?= htmlspecialchars($motorcycle['image_path']) ?>"
+                                alt="<?= htmlspecialchars($motorcycle['motorcycle_name']) ?>"
                             >
 
                         </div>
 
                         <div class="vehicle-info">
                             <p class="availability-count">
-                                <?= $inventory[$motorcycle['name']] ?? 0 ?>
+                                <?= (int) $motorcycle['available_units'] ?>
                             </p>
 
                             <h3>
-                                <?= htmlspecialchars($motorcycle['name']) ?>
+                                <?= htmlspecialchars($motorcycle['motorcycle_name']) ?>
                             </h3>
 
                             <p>
-                                <?= htmlspecialchars($motorcycle['price']) ?>
+                                ₱<?= htmlspecialchars($motorcycle['price_per_day']) ?>/Day
                             </p>
 
                             <?php if ($is_logged_in): ?>
@@ -222,8 +221,8 @@ while ($row = $inventory_result->fetch_assoc()) {
                             <button
                                 type="button"
                                 class="button button-small js-book"
-                                data-motorcycle="<?= htmlspecialchars($motorcycle['name']) ?>"
-                                data-price="<?= htmlspecialchars(str_replace(['₱', '/Day', ','], '', $motorcycle['price'])) ?>"
+                                data-motorcycle="<?= htmlspecialchars($motorcycle['motorcycle_name']) ?>"
+                                data-price="<?= htmlspecialchars(str_replace(['₱', '/Day', ','], '', $motorcycle['price_per_day'])) ?>"
                             >
                                 RENT NOW
                             </button>
