@@ -3,6 +3,8 @@
 session_start();
 require_once 'db.php';
 
+
+/* Only admin can delete bookings */
 if (
     !isset($_SESSION['user_id']) ||
     !isset($_SESSION['role']) ||
@@ -12,19 +14,31 @@ if (
     exit;
 }
 
+
+/* Only allow POST requests */
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: admin.php");
     exit;
 }
 
-$booking_id = (int) ($_POST['booking_id'] ?? 0);
 
-if ($booking_id <= 0) {
+/* Validate booking ID */
+$booking_id =
+    filter_input(
+        INPUT_POST,
+        'booking_id',
+        FILTER_VALIDATE_INT
+    );
+
+
+if (!$booking_id || $booking_id <= 0) {
     header("Location: admin.php?delete=error");
     exit;
 }
 
+
 $license_path = null;
+
 
 try {
 
@@ -43,25 +57,47 @@ try {
         FOR UPDATE
     ");
 
+
+    if (!$stmt) {
+        throw new RuntimeException(
+            "Unable to prepare booking lookup."
+        );
+    }
+
+
     $stmt->bind_param(
         "i",
         $booking_id
     );
 
-    $stmt->execute();
 
-    $result = $stmt->get_result();
-    $booking = $result->fetch_assoc();
+    if (!$stmt->execute()) {
+        throw new RuntimeException(
+            "Unable to retrieve booking."
+        );
+    }
+
+
+    $result =
+        $stmt->get_result();
+
+    $booking =
+        $result->fetch_assoc();
+
 
     $stmt->close();
 
 
+    /* Booking does not exist */
     if (!$booking) {
 
         $conn->rollback();
         $conn->close();
 
-        header("Location: admin.php?delete=error");
+        header(
+            "Location: admin.php?delete=error"
+        );
+
         exit;
     }
 
@@ -85,7 +121,9 @@ try {
     if ($driver_license !== '') {
 
         $safe_license_name =
-            basename($driver_license);
+            basename(
+                $driver_license
+            );
 
         $license_path =
             __DIR__ .
@@ -106,20 +144,37 @@ try {
 
         $stmt = $conn->prepare("
             UPDATE motorcycle_inventory
+
             SET available_units =
                 LEAST(
                     total_units,
                     available_units + 1
                 )
+
             WHERE motorcycle_name = ?
         ");
+
+
+        if (!$stmt) {
+            throw new RuntimeException(
+                "Unable to prepare inventory restoration."
+            );
+        }
+
 
         $stmt->bind_param(
             "s",
             $motorcycle_name
         );
 
-        $stmt->execute();
+
+        if (!$stmt->execute()) {
+            throw new RuntimeException(
+                "Unable to restore motorcycle inventory."
+            );
+        }
+
+
         $stmt->close();
     }
 
@@ -131,32 +186,41 @@ try {
         WHERE id = ?
     ");
 
+
+    if (!$stmt) {
+        throw new RuntimeException(
+            "Unable to prepare booking deletion."
+        );
+    }
+
+
     $stmt->bind_param(
         "i",
         $booking_id
     );
 
-    $stmt->execute();
+
+    if (!$stmt->execute()) {
+        throw new RuntimeException(
+            "Unable to delete booking."
+        );
+    }
 
 
     if ($stmt->affected_rows !== 1) {
 
         $stmt->close();
 
-        $conn->rollback();
-        $conn->close();
-
-        header("Location: admin.php?delete=error");
-        exit;
+        throw new RuntimeException(
+            "Booking deletion did not affect exactly one row."
+        );
     }
 
 
     $stmt->close();
 
 
-    /*
-        Commit database changes first.
-    */
+    /* Commit database changes first */
 
     $conn->commit();
     $conn->close();
@@ -182,21 +246,39 @@ try {
     }
 
 
-    header("Location: admin.php?delete=success");
+    header(
+        "Location: admin.php?delete=success"
+    );
+
     exit;
 
 
 } catch (Throwable $e) {
-
-    $conn->rollback();
-    $conn->close();
 
     error_log(
         "Delete booking error: " .
         $e->getMessage()
     );
 
-    header("Location: admin.php?delete=error");
+
+    try {
+        $conn->rollback();
+    } catch (Throwable $rollbackError) {
+
+        error_log(
+            "Delete booking rollback error: " .
+            $rollbackError->getMessage()
+        );
+    }
+
+
+    $conn->close();
+
+
+    header(
+        "Location: admin.php?delete=error"
+    );
+
     exit;
 }
 

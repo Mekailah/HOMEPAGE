@@ -106,6 +106,7 @@ $features = [
             background: #ffffff;
             color: #0E1B29;
             font: inherit;
+            font-weight: 400;
             text-align: left;
             cursor: pointer;
         }
@@ -542,14 +543,58 @@ $features = [
                     </div>
 
                 <label>
-                    MODE OF PAYMENT
-                    <select name="payment_method" required> 
-                        <option value="" disabled selected>Select payment method</option>
-                        <option value="GCash">GCash</option>
-                        <option value="BPI">BPI</option>
-                    </select>
-                </label>
-                
+                        MODE OF PAYMENT
+                        <select name="payment_method" id="paymentMethod" required>
+                            <option value="" disabled selected>Select payment method</option>
+                            <option value="GCash">GCash</option>
+                            <option value="BPI">BPI</option>
+                        </select>
+                    </label>
+
+                    <div id="paymentDetails" style="display: none; margin-top: 15px; text-align: center;">
+
+                        <p style="margin-bottom: 8px;">
+                            AMOUNT TO PAY:
+                            ₱<span id="paymentAmount">0.00</span>
+                        </p>
+
+                        <img
+                            id="gcashQR"
+                            src="assets/gcash-qr.jpg"
+                            alt="GCash payment QR"
+                            style="
+                                display: none;
+                                width: 260px;
+                                max-width: 100%;
+                                margin: 10px auto;
+                                border-radius: 10px;
+                            "
+                        >
+
+                        <img
+                            id="bpiQR"
+                            src="assets/bpi-qr.jpg"
+                            alt="BPI payment QR"
+                            style="
+                                display: none;
+                                width: 260px;
+                                max-width: 100%;
+                                margin: 10px auto;
+                                border-radius: 10px;
+                            "
+                        >
+
+                        <p style="
+                            font-size: 12px;
+                            margin-top: 8px;
+                            color: #555;
+                        ">
+                            Scan the QR code and pay the total amount.
+                            Your booking will remain pending until payment is verified.
+                        </p>
+
+                    </div>
+                                    
                 <label>
                     PICK-UP LOCATION
                     <select name="pickup_branch" required>
@@ -628,6 +673,83 @@ document.addEventListener('click', function (event) {
         }
     });
 });
+</script>
+
+<script>
+(function () {
+
+    const paymentMethod =
+        document.getElementById('paymentMethod');
+
+    const paymentDetails =
+        document.getElementById('paymentDetails');
+
+    const gcashQR =
+        document.getElementById('gcashQR');
+
+    const bpiQR =
+        document.getElementById('bpiQR');
+
+    const paymentAmount =
+        document.getElementById('paymentAmount');
+
+    const paymentBookingTotal =
+        document.getElementById('bookingTotal');
+
+
+    if (!paymentMethod) {
+        return;
+    }
+
+
+    paymentMethod.addEventListener('change', function () {
+
+        paymentDetails.style.display = 'block';
+
+        if (paymentBookingTotal) {
+            paymentAmount.textContent =
+                paymentBookingTotal.textContent;
+        }
+
+
+        if (this.value === 'GCash') {
+
+            gcashQR.style.display = 'block';
+            bpiQR.style.display = 'none';
+
+        } else if (this.value === 'BPI') {
+
+            gcashQR.style.display = 'none';
+            bpiQR.style.display = 'block';
+
+        }
+
+    });
+
+
+    if (paymentBookingTotal) {
+
+        const paymentObserver =
+            new MutationObserver(function () {
+
+                paymentAmount.textContent =
+                    paymentBookingTotal.textContent;
+
+            });
+
+
+        paymentObserver.observe(
+            paymentBookingTotal,
+            {
+                childList: true,
+                characterData: true,
+                subtree: true
+            }
+        );
+
+    }
+
+})();
 </script>
 
 <script src="assets/app.js"></script>
