@@ -1,0 +1,15 @@
+# Uploaded driver's license images
+uploads/licenses/*
+!uploads/licenses/.gitkeep
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# VS Code / IDE settings
+.vscode/
+.idea/
+
+# Temporary and log files
+*.log
+*.tmp
