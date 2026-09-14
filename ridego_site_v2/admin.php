@@ -916,58 +916,71 @@ $inventory_list = $conn->query("
                     $inventory_list->fetch_assoc()
             ): ?>
 
+                <?php
+                    $inventory_form_id =
+                        'inventory-form-' .
+                        (int) $motorcycle['id'];
+                ?>
+
                 <tr>
 
-                    <form
-                        method="POST"
-                        action="update_inventory.php"
-                    >
+                    <td>
+                        <?= htmlspecialchars(
+                            $motorcycle['motorcycle_name']
+                        ) ?>
+                    </td>
 
+                    <td>
                         <input
-                            type="hidden"
-                            name="inventory_id"
+                            type="number"
+                            name="total_units"
+                            min="0"
                             value="<?= htmlspecialchars(
-                                $motorcycle['id']
+                                $motorcycle['total_units']
                             ) ?>"
+                            form="<?= htmlspecialchars(
+                                $inventory_form_id
+                            ) ?>"
+                            required
                         >
+                    </td>
 
-                        <td>
-                            <?= htmlspecialchars(
-                                $motorcycle['motorcycle_name']
-                            ) ?>
-                        </td>
+                    <td>
+                        <input
+                            type="number"
+                            name="available_units"
+                            min="0"
+                            value="<?= htmlspecialchars(
+                                $motorcycle['available_units']
+                            ) ?>"
+                            form="<?= htmlspecialchars(
+                                $inventory_form_id
+                            ) ?>"
+                            required
+                        >
+                    </td>
 
-                        <td>
+                    <td>
+                        <form
+                            id="<?= htmlspecialchars(
+                                $inventory_form_id
+                            ) ?>"
+                            method="POST"
+                            action="update_inventory.php"
+                        >
                             <input
-                                type="number"
-                                name="total_units"
-                                min="0"
+                                type="hidden"
+                                name="inventory_id"
                                 value="<?= htmlspecialchars(
-                                    $motorcycle['total_units']
+                                    $motorcycle['id']
                                 ) ?>"
-                                required
                             >
-                        </td>
 
-                        <td>
-                            <input
-                                type="number"
-                                name="available_units"
-                                min="0"
-                                value="<?= htmlspecialchars(
-                                    $motorcycle['available_units']
-                                ) ?>"
-                                required
-                            >
-                        </td>
-
-                        <td>
                             <button type="submit">
                                 SAVE
                             </button>
-                        </td>
-
-                    </form>
+                        </form>
+                    </td>
 
                 </tr>
 
