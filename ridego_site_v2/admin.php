@@ -24,6 +24,15 @@ $inventory_error =
     $_GET['inventory'] === 'error';
 
 
+$delete_success =
+    isset($_GET['delete']) &&
+    $_GET['delete'] === 'success';
+
+$delete_error =
+    isset($_GET['delete']) &&
+    $_GET['delete'] === 'error';
+
+
 /* User must be logged in */
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -342,6 +351,105 @@ $inventory_list = $conn->query("
         }
 
 
+
+        /* DELETE BUTTON */
+        .bookings-section .delete-button {
+            background: #b42318;
+            color: #FFFFFF;
+        }
+
+        .bookings-section .delete-button:hover {
+            background: #8f1c14;
+        }
+
+
+
+        /* DELETE CONFIRMATION MODAL */
+
+        .delete-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(14, 27, 41, 0.72);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .delete-modal-overlay.show {
+            display: flex;
+        }
+
+        .delete-modal {
+            width: 100%;
+            max-width: 430px;
+            background: #FFFFFF;
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+            text-align: center;
+        }
+
+        .delete-modal-icon {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: #fff1f0;
+            color: #b42318;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .delete-modal h3 {
+            margin: 0 0 10px;
+            font-size: 20px;
+            color: #0E1B29;
+        }
+
+        .delete-modal p {
+            margin: 0 0 22px;
+            color: #52606d;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .delete-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .delete-modal-actions button {
+            min-width: 120px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 9px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .delete-cancel-button {
+            background: #e9eef2;
+            color: #0E1B29;
+        }
+
+        .delete-confirm-button {
+            background: #b42318;
+            color: #FFFFFF;
+        }
+
+        .delete-cancel-button:hover,
+        .delete-confirm-button:hover {
+            opacity: 0.9;
+        }
+
         /* MOBILE */
 
         @media (max-width: 700px) {
@@ -499,6 +607,53 @@ $inventory_list = $conn->query("
     <?php endif; ?>
 
 
+
+    <!-- DELETE SUCCESS MESSAGE -->
+
+    <?php if ($delete_success): ?>
+
+        <div
+            id="deleteSuccess"
+            style="
+                background:#3C8D8A;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Booking deleted successfully!
+        </div>
+
+    <?php endif; ?>
+
+
+    <!-- DELETE ERROR MESSAGE -->
+
+    <?php if ($delete_error): ?>
+
+        <div
+            id="deleteError"
+            style="
+                background:#b42318;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Something went wrong while deleting the booking.
+        </div>
+
+    <?php endif; ?>
+
+
     <!-- HIDE MESSAGES AFTER 3 SECONDS -->
 
     <script>
@@ -521,6 +676,13 @@ $inventory_list = $conn->query("
                 document.getElementById('inventoryError');
 
 
+            const deleteSuccess =
+                document.getElementById('deleteSuccess');
+
+            const deleteError =
+                document.getElementById('deleteError');
+
+
             if (statusMessage) {
                 statusMessage.style.display = 'none';
             }
@@ -539,6 +701,15 @@ $inventory_list = $conn->query("
 
             if (inventoryError) {
                 inventoryError.style.display = 'none';
+            }
+
+
+            if (deleteSuccess) {
+                deleteSuccess.style.display = 'none';
+            }
+
+            if (deleteError) {
+                deleteError.style.display = 'none';
             }
 
         }, 3000);
@@ -622,247 +793,71 @@ $inventory_list = $conn->query("
 
 
     <!-- BOOKINGS -->
-
     <section class="bookings-section">
-
-        <h2>
-            BOOKINGS
-        </h2>
-
-
+        <h2>BOOKINGS</h2>
         <table>
-
             <thead>
-
                 <tr>
-
-                    <th>ID</th>
-
-                    <th>CUSTOMER</th>
-
-                    <th>EMAIL</th>
-
-                    <th>MOTORCYCLE</th>
-
-                    <th>PICK-UP</th>
-
-                    <th>RETURN</th>
-
-                    <th>PAYMENT</th>
-
-                    <th>PICK-UP LOCATION</th>
-
-                    <th>DROP-OFF LOCATION</th>
-
-                    <th>STATUS</th>
-
+                    <th>ID</th><th>CUSTOMER</th><th>EMAIL</th><th>MOTORCYCLE</th>
+                    <th>PICK-UP</th><th>RETURN</th><th>PAYMENT</th>
+                    <th>PICK-UP LOCATION</th><th>DROP-OFF LOCATION</th>
+                    <th>STATUS</th><th>ACTION</th>
                 </tr>
-
             </thead>
-
-
             <tbody>
-
-
-            <?php if (
-                $bookings &&
-                $bookings->num_rows > 0
-            ): ?>
-
-
-                <?php while (
-                    $booking =
-                        $bookings->fetch_assoc()
-                ): ?>
-
-
+            <?php if ($bookings && $bookings->num_rows > 0): ?>
+                <?php while ($booking = $bookings->fetch_assoc()): ?>
                     <tr>
-
-
+                        <td><?= htmlspecialchars($booking['id']) ?></td>
+                        <td><?= htmlspecialchars($booking['full_name']) ?></td>
+                        <td><?= htmlspecialchars($booking['email']) ?></td>
+                        <td><?= htmlspecialchars($booking['motorcycle_name']) ?></td>
                         <td>
-                            <?= htmlspecialchars(
-                                $booking['id']
-                            ) ?>
+                            <?= htmlspecialchars($booking['pickup_date']) ?>
+                            <?= htmlspecialchars($booking['pickup_time']) ?>
                         </td>
-
-
                         <td>
-                            <?= htmlspecialchars(
-                                $booking['full_name']
-                            ) ?>
+                            <?= htmlspecialchars($booking['return_date']) ?>
+                            <?= htmlspecialchars($booking['return_time']) ?>
                         </td>
-
-
-                        <td>
-                            <?= htmlspecialchars(
-                                $booking['email']
-                            ) ?>
-                        </td>
-
-
-                        <td>
-                            <?= htmlspecialchars(
-                                $booking['motorcycle_name']
-                            ) ?>
-                        </td>
-
-
-                        <td>
-
-                            <?= htmlspecialchars(
-                                $booking['pickup_date']
-                            ) ?>
-
-                            <?= htmlspecialchars(
-                                $booking['pickup_time']
-                            ) ?>
-
-                        </td>
-
-
-                        <td>
-
-                            <?= htmlspecialchars(
-                                $booking['return_date']
-                            ) ?>
-
-                            <?= htmlspecialchars(
-                                $booking['return_time']
-                            ) ?>
-
-                        </td>
-
-
-                        <td>
-                            <?= htmlspecialchars(
-                                $booking['payment_method']
-                            ) ?>
-                        </td>
-
-
-                        <td>
-                            <?= htmlspecialchars(
-                                $booking['pickup_branch']
-                            ) ?>
-                        </td>
-
-
-                        <td>
-                            <?= htmlspecialchars(
-                                $booking['dropoff_branch']
-                            ) ?>
-                        </td>
-
-
-                        <!-- BOOKING STATUS -->
-
+                        <td><?= htmlspecialchars($booking['payment_method']) ?></td>
+                        <td><?= htmlspecialchars($booking['pickup_branch']) ?></td>
+                        <td><?= htmlspecialchars($booking['dropoff_branch']) ?></td>
                         <td class="status">
-
-
-                            <form
-                                method="POST"
-                                action="update_status.php"
-                            >
-
-
-                                <input
-                                    type="hidden"
-                                    name="booking_id"
-                                    value="<?= htmlspecialchars(
-                                        $booking['id']
-                                    ) ?>"
-                                >
-
-
+                            <form method="POST" action="update_status.php">
+                                <input type="hidden" name="booking_id"
+                                    value="<?= htmlspecialchars($booking['id']) ?>">
                                 <select name="status">
-
-
-                                    <option
-                                        value="Pending"
-                                        <?= $booking['status'] === 'Pending'
-                                            ? 'selected'
-                                            : '' ?>
-                                    >
-                                        Pending
-                                    </option>
-
-
-                                    <option
-                                        value="Confirmed"
-                                        <?= $booking['status'] === 'Confirmed'
-                                            ? 'selected'
-                                            : '' ?>
-                                    >
-                                        Confirmed
-                                    </option>
-
-
-                                    <option
-                                        value="Completed"
-                                        <?= $booking['status'] === 'Completed'
-                                            ? 'selected'
-                                            : '' ?>
-                                    >
-                                        Completed
-                                    </option>
-
-
-                                    <option
-                                        value="Cancelled"
-                                        <?= $booking['status'] === 'Cancelled'
-                                            ? 'selected'
-                                            : '' ?>
-                                    >
-                                        Cancelled
-                                    </option>
-
-
+                                    <option value="Pending" <?= $booking['status'] === 'Pending' ? 'selected' : '' ?>>Pending</option>
+                                    <option value="Confirmed" <?= $booking['status'] === 'Confirmed' ? 'selected' : '' ?>>Confirmed</option>
+                                    <option value="Completed" <?= $booking['status'] === 'Completed' ? 'selected' : '' ?>>Completed</option>
+                                    <option value="Cancelled" <?= $booking['status'] === 'Cancelled' ? 'selected' : '' ?>>Cancelled</option>
                                 </select>
-
-
-                                <button type="submit">
-                                    SAVE
-                                </button>
-
-
+                                <button type="submit">SAVE</button>
                             </form>
-
-
                         </td>
-
-
+                        <td>
+                            <button
+                                type="button"
+                                class="delete-button js-delete-booking"
+                                data-booking-id="<?= htmlspecialchars($booking['id']) ?>"
+                                data-customer="<?= htmlspecialchars($booking['full_name']) ?>"
+                                data-motorcycle="<?= htmlspecialchars($booking['motorcycle_name']) ?>"
+                            >
+                                DELETE
+                            </button>
+                        </td>
                     </tr>
-
-
                 <?php endwhile; ?>
-
-
             <?php else: ?>
-
-
                 <tr>
-
-                    <td colspan="10">
-                        No bookings found.
-                    </td>
-
+                    <td colspan="11">No bookings found.</td>
                 </tr>
-
-
             <?php endif; ?>
-
-
             </tbody>
-
-
         </table>
-
-
     </section>
 
-
-
-    <!-- MOTORCYCLE INVENTORY -->
 
     <!-- MOTORCYCLE INVENTORY -->
 
@@ -974,6 +969,129 @@ $inventory_list = $conn->query("
 
 </main>
 
+
+
+
+<div id="deleteModal" class="delete-modal-overlay" aria-hidden="true">
+    <div class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+        <div class="delete-modal-icon">!</div>
+
+        <h3 id="deleteModalTitle">Delete Booking?</h3>
+
+        <p id="deleteModalText">
+            This action cannot be undone.
+        </p>
+
+        <div class="delete-modal-actions">
+            <button
+                type="button"
+                id="cancelDeleteButton"
+                class="delete-cancel-button"
+            >
+                CANCEL
+            </button>
+
+            <form
+                id="deleteBookingForm"
+                method="POST"
+                action="delete_booking.php"
+            >
+                <input
+                    type="hidden"
+                    id="deleteBookingId"
+                    name="booking_id"
+                    value=""
+                >
+
+                <button
+                    type="submit"
+                    class="delete-confirm-button"
+                >
+                    YES, DELETE
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const deleteModal =
+        document.getElementById('deleteModal');
+
+    const deleteBookingId =
+        document.getElementById('deleteBookingId');
+
+    const deleteModalText =
+        document.getElementById('deleteModalText');
+
+    const cancelDeleteButton =
+        document.getElementById('cancelDeleteButton');
+
+    document
+        .querySelectorAll('.js-delete-booking')
+        .forEach(function (button) {
+            button.addEventListener('click', function () {
+                const bookingId =
+                    button.dataset.bookingId || '';
+
+                const customer =
+                    button.dataset.customer || 'this customer';
+
+                const motorcycle =
+                    button.dataset.motorcycle || 'this motorcycle';
+
+                deleteBookingId.value = bookingId;
+
+                deleteModalText.textContent =
+                    'Delete the booking for ' +
+                    customer +
+                    ' (' +
+                    motorcycle +
+                    ')? This action cannot be undone.';
+
+                deleteModal.classList.add('show');
+                deleteModal.setAttribute(
+                    'aria-hidden',
+                    'false'
+                );
+            });
+        });
+
+    function closeDeleteModal() {
+        deleteModal.classList.remove('show');
+        deleteModal.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+        deleteBookingId.value = '';
+    }
+
+    cancelDeleteButton.addEventListener(
+        'click',
+        closeDeleteModal
+    );
+
+    deleteModal.addEventListener(
+        'click',
+        function (event) {
+            if (event.target === deleteModal) {
+                closeDeleteModal();
+            }
+        }
+    );
+
+    document.addEventListener(
+        'keydown',
+        function (event) {
+            if (
+                event.key === 'Escape' &&
+                deleteModal.classList.contains('show')
+            ) {
+                closeDeleteModal();
+            }
+        }
+    );
+</script>
 
 </body>
 
