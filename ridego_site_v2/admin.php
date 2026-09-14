@@ -2,31 +2,46 @@
 session_start();
 require_once 'db.php';
 
+/* Message states */
 $status_updated =
     isset($_GET['status']) &&
     $_GET['status'] === 'updated';
 
-    $inventory_updated =
+$status_unavailable =
+    isset($_GET['status']) &&
+    $_GET['status'] === 'unavailable';
+
+$status_error =
+    isset($_GET['status']) &&
+    $_GET['status'] === 'error';
+
+$inventory_updated =
     isset($_GET['inventory']) &&
     $_GET['inventory'] === 'updated';
 
 $inventory_error =
     isset($_GET['inventory']) &&
     $_GET['inventory'] === 'error';
-    
+
+
 /* User must be logged in */
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
+
 /* Only the owner/admin can access this page */
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (
+    !isset($_SESSION['role']) ||
+    $_SESSION['role'] !== 'admin'
+) {
     header("Location: index.php");
     exit;
 }
 
-/* Get dashboard totals */
+
+/* Get total customers */
 $total_users_result = $conn->query("
     SELECT COUNT(*) AS total
     FROM users
@@ -37,7 +52,7 @@ $total_users =
     $total_users_result->fetch_assoc()['total'];
 
 
-/* Total bookings */
+/* Get total bookings */
 $total_bookings_result = $conn->query("
     SELECT COUNT(*) AS total
     FROM bookings
@@ -47,7 +62,7 @@ $total_bookings =
     $total_bookings_result->fetch_assoc()['total'];
 
 
-/* Total available motorcycles */
+/* Get total available motorcycles */
 $total_available_result = $conn->query("
     SELECT SUM(available_units) AS total
     FROM motorcycle_inventory
@@ -369,53 +384,99 @@ $inventory_list = $conn->query("
 <main class="dashboard">
 
 
-    <!-- BOOKING STATUS MESSAGE -->
+    <!-- BOOKING STATUS SUCCESS MESSAGE -->
 
-<?php if ($status_updated): ?>
+    <?php if ($status_updated): ?>
 
-    <div
-        id="statusMessage"
-        style="
-            background:#3C8D8A;
-            color:#FFFFFF;
-            padding:12px 16px;
-            border-radius:10px;
-            margin-bottom:20px;
-            text-align:center;
-            font-size:13px;
-            font-weight:700;
-        "
-    >
-        Booking status updated successfully!
-    </div>
+        <div
+            id="statusMessage"
+            style="
+                background:#3C8D8A;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Booking status updated successfully!
+        </div>
 
-<?php endif; ?>
-
-
-<!-- INVENTORY SUCCESS MESSAGE -->
-
-<?php if ($inventory_updated): ?>
-
-    <div
-        id="inventoryMessage"
-        style="
-            background:#3C8D8A;
-            color:#FFFFFF;
-            padding:12px 16px;
-            border-radius:10px;
-            margin-bottom:20px;
-            text-align:center;
-            font-size:13px;
-            font-weight:700;
-        "
-    >
-        Inventory updated successfully!
-    </div>
-
-<?php endif; ?>
+    <?php endif; ?>
 
 
-<!-- INVENTORY ERROR MESSAGE -->
+    <!-- BOOKING STATUS UNAVAILABLE MESSAGE -->
+
+    <?php if ($status_unavailable): ?>
+
+        <div
+            id="statusUnavailable"
+            style="
+                background:#b42318;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Cannot update booking status because no motorcycle unit is available.
+        </div>
+
+    <?php endif; ?>
+
+
+    <!-- BOOKING STATUS ERROR MESSAGE -->
+
+    <?php if ($status_error): ?>
+
+        <div
+            id="statusError"
+            style="
+                background:#b42318;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Something went wrong while updating the booking status.
+        </div>
+
+    <?php endif; ?>
+
+
+    <!-- INVENTORY SUCCESS MESSAGE -->
+
+    <?php if ($inventory_updated): ?>
+
+        <div
+            id="inventoryMessage"
+            style="
+                background:#3C8D8A;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Inventory updated successfully!
+        </div>
+
+    <?php endif; ?>
+
+
+    <!-- INVENTORY ERROR MESSAGE -->
 
     <?php if ($inventory_error): ?>
 
@@ -438,43 +499,62 @@ $inventory_list = $conn->query("
     <?php endif; ?>
 
 
-   <script>
-    setTimeout(function () {
+    <!-- HIDE MESSAGES AFTER 3 SECONDS -->
 
-        const statusMessage =
-            document.getElementById('statusMessage');
+    <script>
 
-        const inventoryMessage =
-            document.getElementById('inventoryMessage');
+        setTimeout(function () {
 
-        const inventoryError =
-            document.getElementById('inventoryError');
+            const statusMessage =
+                document.getElementById('statusMessage');
+
+            const statusUnavailable =
+                document.getElementById('statusUnavailable');
+
+            const statusError =
+                document.getElementById('statusError');
+
+            const inventoryMessage =
+                document.getElementById('inventoryMessage');
+
+            const inventoryError =
+                document.getElementById('inventoryError');
 
 
-        if (statusMessage) {
-            statusMessage.style.display = 'none';
+            if (statusMessage) {
+                statusMessage.style.display = 'none';
+            }
+
+            if (statusUnavailable) {
+                statusUnavailable.style.display = 'none';
+            }
+
+            if (statusError) {
+                statusError.style.display = 'none';
+            }
+
+            if (inventoryMessage) {
+                inventoryMessage.style.display = 'none';
+            }
+
+            if (inventoryError) {
+                inventoryError.style.display = 'none';
+            }
+
+        }, 3000);
+
+
+        if (window.history.replaceState) {
+
+            window.history.replaceState(
+                null,
+                '',
+                'admin.php'
+            );
+
         }
 
-        if (inventoryMessage) {
-            inventoryMessage.style.display = 'none';
-        }
-
-        if (inventoryError) {
-            inventoryError.style.display = 'none';
-        }
-
-    }, 3000);
-
-
-    if (window.history.replaceState) {
-        window.history.replaceState(
-            null,
-            '',
-            'admin.php'
-        );
-    }
-</script>
-
+    </script>
 
 
     <!-- WELCOME -->

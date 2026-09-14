@@ -70,9 +70,11 @@ $features = [
 </header>
 
 <main>
+        <!-- BOOKING SUCCESS MESSAGE -->
     <?php if ($booking_success): ?>
 
-        <div class="booking-success-message" id="bookingSuccess"
+        <div
+            id="bookingSuccess"
             style="
                 background:#3C8D8A;
                 color:#FFFFFF;
@@ -80,22 +82,73 @@ $features = [
                 padding:10px 15px;
                 font-size:12px;
                 font-weight:700;
-            ">
+            "
+        >
             Booking submitted successfully!
         </div>
 
-        <script>
-            setTimeout(function () {
-                const message = document.getElementById('bookingSuccess');
+    <?php endif; ?>
 
-                if (message) {
-                    message.style.display = 'none';
-                }
-            }, 3000);
-        </script>
+
+    <!-- BOOKING ERROR MESSAGE -->
+    <?php if ($booking_error): ?>
+
+        <div
+            id="bookingError"
+            style="
+                background:#b42318;
+                color:#FFFFFF;
+                text-align:center;
+                padding:10px 15px;
+                font-size:12px;
+                font-weight:700;
+            "
+        >
+            <?= htmlspecialchars($booking_message) ?>
+        </div>
 
     <?php endif; ?>
+
+
+    <!-- HIDE MESSAGE AFTER 3 SECONDS -->
+    <script>
+        setTimeout(function () {
+
+            const successMessage =
+                document.getElementById('bookingSuccess');
+
+            const errorMessage =
+                document.getElementById('bookingError');
+
+            if (successMessage) {
+                successMessage.style.display = 'none';
+            }
+
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+            }
+
+        }, 3000);
+
+
+        if (
+            window.history.replaceState &&
+            (
+                document.getElementById('bookingSuccess') ||
+                document.getElementById('bookingError')
+            )
+        ) {
+            window.history.replaceState(
+                null,
+                '',
+                'index.php'
+            );
+        }
+    </script>
+
+
     <section class="hero" id="home">
+    
         <div class="hero-content">
         <h1 style="color: #0E1B29 !important;">RIDE MORE.<br>WORRY <span style="color: #3C8D8A !important;">LESS.</span></h1>
             <p>Your ride, your schedule. Explore the City<br>and beyond with RIDEGO RENTALS</p>
@@ -253,7 +306,7 @@ $features = [
             <p>Fill in the details below to reserve your motorcycle.</p>
 
             <form id="bookingForm" method="POST" action="book.php" enctype="multipart/form-data">
-
+                <div id="bookingFormError" class="booking-form-error" role="alert"></div>
                 <label>
                     NAME
                     <input
@@ -303,7 +356,8 @@ $features = [
 
                 <label>
                     MODE OF PAYMENT
-                    <select name="payment_method" required>                     <option value="Cash">Cash</option>
+                    <select name="payment_method" required> 
+                        <option value="" disabled selected>Select payment method</option>
                         <option value="GCash">GCash</option>
                         <option value="BPI">BPI</option>
                     </select>

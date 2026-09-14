@@ -275,6 +275,7 @@ while ($row = $inventory_result->fetch_assoc()) {
                 <label>
                     MODE OF PAYMENT
                     <select name="payment_method" required>
+                        <option value="" disabled selected>Select payment method</option>
                         <option value="GCash">GCash</option>
                         <option value="BPI">BPI</option>
                     </select>
