@@ -45,6 +45,14 @@ $features = [
 
     <style>
 
+        .booking-total p {
+            font-size: 13px;
+        }
+
+        .booking-total span {
+            font-size: 13px;
+        }
+
         .time-picker {
             position: relative;
             margin-top: 6px;
@@ -120,6 +128,95 @@ $features = [
         .time-option.selected {
             background: #3C8D8A;
             color: #ffffff;
+        }
+
+        /* Hover the quick links and contact us */
+        .site-footer a:hover,
+        .policy-link:hover {
+            text-decoration: underline;
+        }
+
+        /* FAQ SECTION */
+        .faq-section { padding: 70px 20px; background: #f7f9fa; }
+        .faq-section h2 { margin: 0 0 30px; text-align: center; color: #0E1B29; }
+        .faq-section h2 span { color: #3C8D8A; }
+        .faq-list { width: 760px; max-width: 100%; margin: 0 auto; }
+        .faq-item { margin-bottom: 12px; border: 1px solid #dce3e7; border-radius: 10px; background: #fff; overflow: hidden; }
+        .faq-question { width: 100%; padding: 16px 18px; border: 0; background: #fff; color: #0E1B29; font: inherit; font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .faq-question::after { content: "+"; color: #3C8D8A; font-size: 22px; font-weight: 500; }
+        .faq-item.open .faq-question::after { content: "−"; }
+        .faq-answer { display: none; padding: 0 18px 16px; color: #555; font-size: 13px; line-height: 1.7; }
+        .faq-answer p { margin: 0; }
+        .faq-item.open .faq-answer { display: block; }
+
+
+        /* SUPPORT POLICY POPUPS */
+        .policy-link {
+            background: none;
+            border: 0;
+            padding: 0;
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .policy-link:hover { text-decoration: underline; }
+
+        .policy-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .policy-modal.open { display: flex; }
+
+        .policy-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(14, 27, 41, 0.65);
+        }
+
+        .policy-card {
+            position: relative;
+            z-index: 1;
+            width: 620px;
+            max-width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 30px;
+            border-radius: 14px;
+            background: #fff;
+            color: #0E1B29;
+            box-shadow: 0 18px 50px rgba(0,0,0,.22);
+        }
+
+        .policy-card h2 {
+            margin: 0 35px 16px 0;
+            font-size: 22px;
+        }
+
+        .policy-card p {
+            margin: 0;
+            color: #4b5560;
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1.8;
+        }
+
+        .policy-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            border: 0;
+            background: transparent;
+            color: #0E1B29;
+            font-size: 28px;
+            cursor: pointer;
         }
 
     </style>
@@ -343,9 +440,19 @@ $features = [
             <p class="banner-side">We are here to make<br>every ride simple<br>and enjoyable</p>
         </div>
     </section>
+    <section class="faq-section" id="faq">
+        <h2>FREQUENTLY ASKED <span>QUESTIONS</span></h2>
+        <div class="faq-list">
+            <div class="faq-item"><button type="button" class="faq-question" aria-expanded="false">What do I need to rent a motorcycle?</button><div class="faq-answer"><p>You need a valid driver's license and the required booking information to reserve a motorcycle.</p></div></div>
+            <div class="faq-item"><button type="button" class="faq-question" aria-expanded="false">How do I book a motorcycle?</button><div class="faq-answer"><p>Choose your preferred motorcycle, click RENT NOW, complete the booking form, and submit your reservation.</p></div></div>
+            <div class="faq-item"><button type="button" class="faq-question" aria-expanded="false">What payment methods do you accept?</button><div class="faq-answer"><p>RIDEGO Rentals currently accepts GCash and BPI payments.</p></div></div>
+            <div class="faq-item"><button type="button" class="faq-question" aria-expanded="false">Where can I pick up and return the motorcycle?</button><div class="faq-answer"><p>You can choose Hibbard Avenue, Dumaguete City or Leon Kilat Mall, Bacong as your pick-up and drop-off location.</p></div></div>
+            <div class="faq-item"><button type="button" class="faq-question" aria-expanded="false">When is my booking confirmed?</button><div class="faq-answer"><p>Your booking remains Pending until your payment and reservation are verified.</p></div></div>
+        </div>
+    </section>
 </main>
 
-<footer id="faq" class="site-footer">
+<footer class="site-footer">
     <div class="footer-brand">
         <img src="assets/logo.svg" alt="RIDEGO RENTALS">
         <p>Your trusted motorcycle rental<br>service for every adventure<br>and everyday journey.</p>
@@ -360,10 +467,10 @@ $features = [
     </div>
     <div class="footer-column">
         <h3>SUPPORT</h3>
-        <a href="#">Terms &amp; Conditions</a><br>
-        <a href="#">Privacy Policy</a><br>
-        <a href="#">Cancellation Policy</a><br>
-        <a href="#">Fees and Charges</a>
+        <button type="button" class="policy-link" data-policy="termsPolicy">Terms &amp; Conditions</button><br>
+        <button type="button" class="policy-link" data-policy="privacyPolicy">Privacy Policy</button><br>
+        <button type="button" class="policy-link" data-policy="cancellationPolicy">Cancellation Policy</button><br>
+        <button type="button" class="policy-link" data-policy="feesPolicy">Fees and Charges</button>
     </div>
     <div class="footer-column contact-column">
         <h3>CONTACT US</h3>
@@ -372,6 +479,43 @@ $features = [
         <p><img class="contact-pin-icon" src="assets/contact-pin.svg" alt=""> Dumaguete City</p>
     </div>
 </footer>
+
+
+<div class="policy-modal" id="termsPolicy" aria-hidden="true">
+    <div class="policy-overlay" data-policy-close></div>
+    <div class="policy-card" role="dialog" aria-modal="true">
+        <button type="button" class="policy-close" data-policy-close aria-label="Close">&times;</button>
+        <h2>Terms &amp; Conditions</h2>
+        <p>By renting a motorcycle from RIDEGO Rentals, customers agree to provide accurate personal information and a valid driver's license during the booking process. The rented motorcycle must be used responsibly and only for lawful purposes. Customers are expected to take proper care of the motorcycle while it is under their possession and return it at the agreed location, date, and time. Any damage, loss, or violation that occurs during the rental period may be subject to review and applicable charges. RIDEGO Rentals reserves the right to refuse or cancel a booking when the provided information is incomplete, invalid, or does not meet the rental requirements.</p>
+    </div>
+</div>
+
+<div class="policy-modal" id="privacyPolicy" aria-hidden="true">
+    <div class="policy-overlay" data-policy-close></div>
+    <div class="policy-card" role="dialog" aria-modal="true">
+        <button type="button" class="policy-close" data-policy-close aria-label="Close">&times;</button>
+        <h2>Privacy Policy</h2>
+        <p>RIDEGO Rentals collects customer information such as name, email address, booking details, and driver's license images only for purposes related to motorcycle rental and reservation processing. This information is used to identify customers, manage bookings, verify rental requirements, and provide rental services. Personal information should not be shared with unrelated parties unless necessary for the rental process or required by law. Customers are responsible for providing accurate information when creating an account or making a reservation. RIDEGO Rentals aims to handle all submitted customer information responsibly and securely.</p>
+    </div>
+</div>
+
+<div class="policy-modal" id="cancellationPolicy" aria-hidden="true">
+    <div class="policy-overlay" data-policy-close></div>
+    <div class="policy-card" role="dialog" aria-modal="true">
+        <button type="button" class="policy-close" data-policy-close aria-label="Close">&times;</button>
+        <h2>Cancellation Policy</h2>
+        <p>Customers who are unable to continue with their reservation should request cancellation as early as possible before the scheduled pickup date and time. Cancellation requests may be reviewed based on the current status of the booking and whether payment has already been processed or verified. Once a motorcycle has already been released to the customer, the reservation may no longer be treated as a normal cancellation. Any refund, if applicable, may depend on the circumstances of the cancellation and the payment status. Customers are encouraged to contact RIDEGO Rentals immediately if their travel plans or rental schedule change.</p>
+    </div>
+</div>
+
+<div class="policy-modal" id="feesPolicy" aria-hidden="true">
+    <div class="policy-overlay" data-policy-close></div>
+    <div class="policy-card" role="dialog" aria-modal="true">
+        <button type="button" class="policy-close" data-policy-close aria-label="Close">&times;</button>
+        <h2>Fees and Charges</h2>
+        <p>The total rental cost is calculated based on the selected motorcycle, its daily rental rate, and the number of rental days indicated in the reservation. Additional charges may apply when a motorcycle is returned later than the agreed return schedule or when damage, loss, or other issues occur during the rental period. Customers may also be responsible for costs resulting from improper use of the motorcycle while it is under their possession. Any additional fee should be reviewed based on the circumstances before it is charged. Customers are encouraged to check their booking information and total rental amount carefully before confirming their reservation.</p>
+    </div>
+</div>
 
 <div class="modal" id="bookingModal" aria-hidden="true">
 
@@ -749,6 +893,48 @@ document.addEventListener('click', function (event) {
 
     }
 
+})();
+</script>
+
+<script>
+document.querySelectorAll('.faq-question').forEach(function (question) {
+    question.addEventListener('click', function () {
+        const item = question.closest('.faq-item');
+        const isOpen = item.classList.toggle('open');
+        question.setAttribute('aria-expanded', String(isOpen));
+    });
+});
+</script>
+
+<script>
+(function () {
+    document.querySelectorAll('[data-policy]').forEach(function (link) {
+        link.addEventListener('click', function () {
+            const modal = document.getElementById(link.dataset.policy);
+            if (modal) {
+                modal.classList.add('open');
+                modal.setAttribute('aria-hidden', 'false');
+            }
+        });
+    });
+
+    function closePolicy(modal) {
+        if (!modal) return;
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    document.querySelectorAll('[data-policy-close]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            closePolicy(button.closest('.policy-modal'));
+        });
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            document.querySelectorAll('.policy-modal.open').forEach(closePolicy);
+        }
+    });
 })();
 </script>
 

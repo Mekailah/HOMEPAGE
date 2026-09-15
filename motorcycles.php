@@ -45,6 +45,14 @@ $stmt->close();
     <link rel="stylesheet" href="assets/style.css">
 
     <style>
+
+        .booking-total p {
+            font-size: 13px;
+        }
+
+        .booking-total span {
+            font-size: 13px;
+        }
         .booking-form-error {
             display: none;
             margin: 0 0 18px;
