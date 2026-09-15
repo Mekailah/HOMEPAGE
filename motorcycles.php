@@ -149,6 +149,84 @@ $stmt->close();
             background: #3C8D8A;
             color: #ffffff;
         }
+
+        /* FOOTER LINK HOVER */
+        .site-footer .footer-column a {
+            transition: color 0.2s ease, opacity 0.2s ease;
+        }
+
+        .site-footer .footer-column a:hover,
+        .site-footer .footer-column a:focus {
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            outline: none;
+        }
+
+        /* SUPPORT POLICY MODAL */
+        .support-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .support-modal.show {
+            display: flex;
+        }
+
+        .support-modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(14, 27, 41, 0.72);
+        }
+
+        .support-modal-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 560px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+        }
+
+        .support-modal-card h2 {
+            margin: 0 35px 12px 0;
+            color: #0E1B29;
+            font-size: 21px;
+        }
+
+        .support-modal-card p {
+            margin: 0;
+            color: #52606d;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .support-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 18px;
+            border: 0;
+            background: transparent;
+            color: #0E1B29;
+            font-size: 28px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .support-modal-close:hover,
+        .support-modal-close:focus {
+            color: #3C8D8A;
+            outline: none;
+        }
+
     </style>
 
 </head>
@@ -291,10 +369,10 @@ $stmt->close();
 
             <h3>SUPPORT</h3>
 
-            <a href="#">Terms &amp; Conditions</a><br>
-            <a href="#">Privacy Policy</a><br>
-            <a href="#">Cancellation Policy</a><br>
-            <a href="#">Fees and Charges</a>
+            <a href="#" class="js-support-modal" data-support="terms">Terms &amp; Conditions</a><br>
+            <a href="#" class="js-support-modal" data-support="privacy">Privacy Policy</a><br>
+            <a href="#" class="js-support-modal" data-support="cancellation">Cancellation Policy</a><br>
+            <a href="#" class="js-support-modal" data-support="fees">Fees and Charges</a>
 
         </div>
 
@@ -309,6 +387,35 @@ $stmt->close();
         </div>
 
     </footer>
+
+
+    <!-- SUPPORT POLICY MODAL -->
+    <div
+        class="support-modal"
+        id="supportModal"
+        aria-hidden="true"
+    >
+        <div class="support-modal-overlay js-close-support"></div>
+
+        <div
+            class="support-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="supportModalTitle"
+        >
+            <button
+                type="button"
+                class="support-modal-close js-close-support"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <h2 id="supportModalTitle"></h2>
+            <p id="supportModalText"></p>
+        </div>
+    </div>
+
 
     <!-- PASTE YOUR BOOKING MODAL HERE -->
 
@@ -541,6 +648,26 @@ $stmt->close();
                         Your booking will remain pending until payment is verified.
                     </p>
 
+                    <label style="display: block; margin-top: 18px; text-align: left;">
+                        PAYMENT PROOF
+                        <input
+                            type="file"
+                            name="payment_proof"
+                            id="paymentProof"
+                            accept="image/jpeg,image/png"
+                        >
+                    </label>
+
+                    <p style="
+                        font-size: 11px;
+                        margin-top: 5px;
+                        color: #777;
+                        text-align: left;
+                    ">
+                        Upload a screenshot of your successful GCash or BPI payment.
+                        JPG or PNG only.
+                    </p>
+
                 </div>
 
                 <label>
@@ -639,6 +766,7 @@ $stmt->close();
         const bpiQR = document.getElementById('bpiQR');
         const paymentAmount = document.getElementById('paymentAmount');
         const paymentBookingTotal = document.getElementById('bookingTotal');
+        const paymentProof = document.getElementById('paymentProof');
 
         if (!paymentMethod) {
             return;
@@ -646,6 +774,10 @@ $stmt->close();
 
         paymentMethod.addEventListener('change', function () {
             paymentDetails.style.display = 'block';
+
+            if (paymentProof) {
+                paymentProof.required = true;
+            }
 
             if (paymentBookingTotal) {
                 paymentAmount.textContent = paymentBookingTotal.textContent;
@@ -673,6 +805,84 @@ $stmt->close();
         }
 
     })();
+    </script>
+
+    <script>
+        (function () {
+            const supportModal =
+                document.getElementById('supportModal');
+
+            const supportTitle =
+                document.getElementById('supportModalTitle');
+
+            const supportText =
+                document.getElementById('supportModalText');
+
+            const supportContent = {
+                terms: {
+                    title: 'Terms & Conditions',
+                    text: 'Renters must provide valid information and a valid driver’s license. The motorcycle must be used responsibly and returned on the agreed date, time, and location. The renter is responsible for following traffic laws and taking reasonable care of the motorcycle during the rental period.'
+                },
+                privacy: {
+                    title: 'Privacy Policy',
+                    text: 'RIDEGO RENTALS collects only the information needed to process bookings, verify identity and payment, and manage rental records. Personal information, driver’s license images, and payment proof are used only for rental-related purposes and should not be shared unnecessarily.'
+                },
+                cancellation: {
+                    title: 'Cancellation Policy',
+                    text: 'Customers who need to cancel a booking should contact RIDEGO RENTALS as soon as possible. Cancellation requests are subject to booking status and rental arrangements. Any applicable refund or adjustment will be reviewed by the owner based on the circumstances of the booking.'
+                },
+                fees: {
+                    title: 'Fees and Charges',
+                    text: 'The rental price is based on the selected motorcycle and rental duration. Additional charges may apply for late returns, damage, loss, or other costs caused during the rental period. Any additional charge should be explained to the customer by RIDEGO RENTALS.'
+                }
+            };
+
+            function openSupportModal(type) {
+                const content = supportContent[type];
+
+                if (!content) {
+                    return;
+                }
+
+                supportTitle.textContent = content.title;
+                supportText.textContent = content.text;
+
+                supportModal.classList.add('show');
+                supportModal.setAttribute('aria-hidden', 'false');
+            }
+
+            function closeSupportModal() {
+                supportModal.classList.remove('show');
+                supportModal.setAttribute('aria-hidden', 'true');
+            }
+
+            document
+                .querySelectorAll('.js-support-modal')
+                .forEach(function (link) {
+                    link.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        openSupportModal(link.dataset.support);
+                    });
+                });
+
+            document
+                .querySelectorAll('.js-close-support')
+                .forEach(function (element) {
+                    element.addEventListener(
+                        'click',
+                        closeSupportModal
+                    );
+                });
+
+            document.addEventListener('keydown', function (event) {
+                if (
+                    event.key === 'Escape' &&
+                    supportModal.classList.contains('show')
+                ) {
+                    closeSupportModal();
+                }
+            });
+        })();
     </script>
 
     <script src="assets/app.js"></script>

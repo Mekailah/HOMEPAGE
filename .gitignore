@@ -5,6 +5,9 @@ uploads/licenses/*
 uploads/motorcycles/*
 !uploads/motorcycles/.gitkeep
 
+uploads/payments/*
+!uploads/payments/.gitkeep
+
 # Operating system files
 .DS_Store
 Thumbs.db

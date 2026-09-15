@@ -737,6 +737,26 @@ $features = [
                             Your booking will remain pending until payment is verified.
                         </p>
 
+                        <label style="display: block; margin-top: 18px; text-align: left;">
+                            PAYMENT PROOF
+                            <input
+                                type="file"
+                                name="payment_proof"
+                                id="paymentProof"
+                                accept="image/jpeg,image/png"
+                            >
+                        </label>
+
+                        <p style="
+                            font-size: 11px;
+                            margin-top: 5px;
+                            color: #777;
+                            text-align: left;
+                        ">
+                            Upload a screenshot of your successful GCash or BPI payment.
+                            JPG or PNG only.
+                        </p>
+
                     </div>
                                     
                 <label>
@@ -840,6 +860,9 @@ document.addEventListener('click', function (event) {
     const paymentBookingTotal =
         document.getElementById('bookingTotal');
 
+    const paymentProof =
+        document.getElementById('paymentProof');
+
 
     if (!paymentMethod) {
         return;
@@ -849,6 +872,10 @@ document.addEventListener('click', function (event) {
     paymentMethod.addEventListener('change', function () {
 
         paymentDetails.style.display = 'block';
+
+        if (paymentProof) {
+            paymentProof.required = true;
+        }
 
         if (paymentBookingTotal) {
             paymentAmount.textContent =

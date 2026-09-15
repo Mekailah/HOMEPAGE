@@ -48,6 +48,14 @@ $delete_error =
     isset($_GET['delete']) &&
     $_GET['delete'] === 'error';
 
+$payment_verified =
+    isset($_GET['payment']) &&
+    $_GET['payment'] === 'verified';
+
+$payment_error =
+    isset($_GET['payment']) &&
+    $_GET['payment'] === 'error';
+
 
 /* User must be logged in */
 if (!isset($_SESSION['user_id'])) {
@@ -112,6 +120,8 @@ $bookings = $conn->query("
         bookings.return_date,
         bookings.return_time,
         bookings.payment_method,
+        bookings.payment_proof,
+        bookings.payment_status,
         bookings.pickup_branch,
         bookings.dropoff_branch,
         bookings.status
@@ -831,6 +841,45 @@ $inventory_list = $conn->query("
     <?php endif; ?>
 
 
+    <!-- PAYMENT VERIFIED SUCCESS MESSAGE -->
+    <?php if ($payment_verified): ?>
+        <div
+            id="paymentVerified"
+            style="
+                background:#3C8D8A;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Payment verified successfully!
+        </div>
+    <?php endif; ?>
+
+    <!-- PAYMENT VERIFICATION ERROR MESSAGE -->
+    <?php if ($payment_error): ?>
+        <div
+            id="paymentError"
+            style="
+                background:#b42318;
+                color:#FFFFFF;
+                padding:12px 16px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:center;
+                font-size:13px;
+                font-weight:700;
+            "
+        >
+            Something went wrong while verifying the payment.
+        </div>
+    <?php endif; ?>
+
+
     <!-- HIDE MESSAGES AFTER 3 SECONDS -->
 
     <script>
@@ -870,6 +919,12 @@ $inventory_list = $conn->query("
 
             const deleteError =
                 document.getElementById('deleteError');
+
+            const paymentVerified =
+                document.getElementById('paymentVerified');
+
+            const paymentError =
+                document.getElementById('paymentError');
 
 
             if (statusMessage) {
@@ -914,6 +969,14 @@ $inventory_list = $conn->query("
 
             if (deleteError) {
                 deleteError.style.display = 'none';
+            }
+
+            if (paymentVerified) {
+                paymentVerified.style.display = 'none';
+            }
+
+            if (paymentError) {
+                paymentError.style.display = 'none';
             }
 
         }, 3000);
@@ -1005,6 +1068,7 @@ $inventory_list = $conn->query("
                     <th>ID</th><th>CUSTOMER</th><th>EMAIL</th><th>PHONE</th>
                     <th>DRIVER'S LICENSE</th><th>MOTORCYCLE</th>
                     <th>PICK-UP</th><th>RETURN</th><th>PAYMENT</th>
+                    <th>PAYMENT PROOF</th><th>PAYMENT STATUS</th>
                     <th>PICK-UP LOCATION</th><th>DROP-OFF LOCATION</th>
                     <th>STATUS</th><th>ACTION</th>
                 </tr>
@@ -1038,6 +1102,41 @@ $inventory_list = $conn->query("
                             <?= htmlspecialchars($booking['return_time']) ?>
                         </td>
                         <td><?= htmlspecialchars($booking['payment_method']) ?></td>
+                        <td>
+                            <?php if (!empty($booking['payment_proof'])): ?>
+                                <a
+                                    class="license-button"
+                                    href="<?= htmlspecialchars('uploads/payments/' . rawurlencode(basename($booking['payment_proof']))) ?>"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    VIEW PROOF
+                                </a>
+                            <?php else: ?>
+                                No proof
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ($booking['payment_status'] === 'Paid'): ?>
+                                <span class="status">PAID</span>
+                            <?php else: ?>
+                                <div style="display:flex; flex-direction:column; align-items:flex-start; gap:7px;">
+                                    <span style="font-weight:700; color:#b7791f;">
+                                        PENDING VERIFICATION
+                                    </span>
+                                    <form method="POST" action="verify_payment.php" style="margin:0;">
+                                        <input
+                                            type="hidden"
+                                            name="booking_id"
+                                            value="<?= htmlspecialchars($booking['id']) ?>"
+                                        >
+                                        <button type="submit">
+                                            VERIFY PAYMENT
+                                        </button>
+                                    </form>
+                                </div>
+                            <?php endif; ?>
+                        </td>
                         <td><?= htmlspecialchars($booking['pickup_branch']) ?></td>
                         <td><?= htmlspecialchars($booking['dropoff_branch']) ?></td>
                         <td class="status">
@@ -1068,7 +1167,7 @@ $inventory_list = $conn->query("
                 <?php endwhile; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="13">No bookings found.</td>
+                    <td colspan="15">No bookings found.</td>
                 </tr>
             <?php endif; ?>
             </tbody>

@@ -319,6 +319,114 @@ if (
 }
 
 
+/* PAYMENT PROOF UPLOAD */
+if (
+    !isset($_FILES['payment_proof']) ||
+    $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK
+) {
+    if (file_exists($license_path)) {
+        unlink($license_path);
+    }
+
+    bookingError(
+        "Please upload a screenshot of your payment."
+    );
+}
+
+$payment_tmp =
+    $_FILES['payment_proof']['tmp_name'];
+
+$payment_size =
+    (int) $_FILES['payment_proof']['size'];
+
+/* Maximum 5MB */
+if ($payment_size > 5 * 1024 * 1024) {
+    if (file_exists($license_path)) {
+        unlink($license_path);
+    }
+
+    bookingError(
+        "Payment proof image must be 5MB or smaller."
+    );
+}
+
+/* Check if uploaded payment proof is really an image */
+$payment_image_info = getimagesize($payment_tmp);
+
+if ($payment_image_info === false) {
+    if (file_exists($license_path)) {
+        unlink($license_path);
+    }
+
+    bookingError(
+        "Please upload a valid payment proof image."
+    );
+}
+
+/* Only allow JPG and PNG */
+if (!isset($allowed_types[$payment_image_info[2]])) {
+    if (file_exists($license_path)) {
+        unlink($license_path);
+    }
+
+    bookingError(
+        "Payment proof must be a JPG or PNG image."
+    );
+}
+
+/* Create payment upload folder if needed */
+$payment_upload_dir =
+    __DIR__ . '/uploads/payments/';
+
+if (!is_dir($payment_upload_dir)) {
+    if (
+        !mkdir(
+            $payment_upload_dir,
+            0755,
+            true
+        )
+    ) {
+        if (file_exists($license_path)) {
+            unlink($license_path);
+        }
+
+        bookingError(
+            "Unable to prepare the payment upload folder."
+        );
+    }
+}
+
+/* Generate safe unique payment proof filename */
+$payment_extension =
+    $allowed_types[$payment_image_info[2]];
+
+$payment_proof =
+    'payment_' .
+    bin2hex(random_bytes(8)) .
+    '.' .
+    $payment_extension;
+
+$payment_path =
+    $payment_upload_dir .
+    $payment_proof;
+
+/* Upload payment proof */
+if (
+    !move_uploaded_file(
+        $payment_tmp,
+        $payment_path
+    )
+) {
+    if (file_exists($license_path)) {
+        unlink($license_path);
+    }
+
+    bookingError(
+        "Failed to upload payment proof. Please try again."
+    );
+}
+
+
 /*
     BOOKING + INVENTORY TRANSACTION
 
@@ -457,11 +565,12 @@ try {
                 return_date,
                 return_time,
                 payment_method,
+                payment_proof,
                 pickup_branch,
                 dropoff_branch
             )
             VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
     if (!$stmt) {
@@ -471,7 +580,7 @@ try {
     }
 
     $stmt->bind_param(
-        "issdsssssss",
+        "issdssssssss",
         $user_id,
         $driver_license,
         $motorcycle_name,
@@ -481,6 +590,7 @@ try {
         $return_date,
         $return_time,
         $payment_method,
+        $payment_proof,
         $pickup_branch,
         $dropoff_branch
     );
@@ -524,9 +634,13 @@ try {
     }
 
 
-    /* Remove uploaded license if booking failed */
+    /* Remove uploaded files if booking failed */
     if (file_exists($license_path)) {
         unlink($license_path);
+    }
+
+    if (isset($payment_path) && file_exists($payment_path)) {
+        unlink($payment_path);
     }
 
 
